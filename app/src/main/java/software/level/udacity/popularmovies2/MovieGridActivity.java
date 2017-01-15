@@ -6,6 +6,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import okhttp3.OkHttpClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import software.level.udacity.popularmovies2.api.MovieService;
+import software.level.udacity.popularmovies2.api.model.MovieTrailerEnvelope;
+
 public class MovieGridActivity extends AppCompatActivity {
 
     public static final String TAG = MovieGridActivity.class.getSimpleName();
@@ -19,6 +28,36 @@ public class MovieGridActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_grid);
+
+        OkHttpClient client = new OkHttpClient();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.themoviedb.org/3/movie/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client)
+                .build();
+
+        MovieService service = retrofit.create(MovieService.class);
+
+        String apiKey = getResources().getString(R.string.API_KEY);
+//        Call<MovieEnvelope> envelope = service.topRated(apiKey);
+
+        Call<MovieTrailerEnvelope> envelope = service.trailers(278, apiKey);
+
+
+        envelope.enqueue(new Callback<MovieTrailerEnvelope>() {
+
+            @Override
+            public void onResponse(Call<MovieTrailerEnvelope> call, Response<MovieTrailerEnvelope> response) {
+                Log.d(TAG, "onResponse: " + response.body().trailers.toString());
+            }
+
+            @Override
+            public void onFailure(Call<MovieTrailerEnvelope> call, Throwable t) {
+
+            }
+        });
+
     }
 
     /**
