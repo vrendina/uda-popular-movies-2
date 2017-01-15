@@ -2,15 +2,15 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
-        <item android:title="@string/popular_menu_title"
+        <item android:title="@string/menu_title_popular"
             android:id="@+id/action_popular"
             app:showAsAction="never" />
 
-        <item android:title="@string/toprated_menu_title"
+        <item android:title="@string/menu_title_toprated"
             android:id="@+id/action_toprated"
             app:showAsAction="never" />
 
-        <item android:title="@string/favorite_menu_title"
+        <item android:title="@string/menu_title_favorite"
             android:id="@+id/action_favorite"
             app:showAsAction="never" />
     </group>
