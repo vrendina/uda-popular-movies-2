@@ -2,9 +2,14 @@ package software.level.udacity.popularmovies2;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ProgressBar;
+
+import butterknife.BindView;
 
 public class MovieGridActivity extends AppCompatActivity {
 
@@ -20,6 +25,13 @@ public class MovieGridActivity extends AppCompatActivity {
 
     // Holds the currently selected movie request type
     private int selectedRequestType = REQUEST_DEFAULT;
+
+    // View binding from Butterknife
+    @BindView(R.id.rv_movie_grid) RecyclerView recyclerView;
+    @BindView(R.id.pb_movies_loading) ProgressBar progressBar;
+
+    // Adapter used for managing views in the RecyclerView
+    MovieGridAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +65,7 @@ public class MovieGridActivity extends AppCompatActivity {
             selectedRequestType = REQUEST_DEFAULT;
         }
 
+        configureRecyclerView();
     }
 
     /**
@@ -79,23 +92,6 @@ public class MovieGridActivity extends AppCompatActivity {
         updateSelectedMenuItem(menu);
 
         return true;
-    }
-
-    /**
-     * Updates which menu item is visibly checked
-     */
-    private void updateSelectedMenuItem(Menu menu) {
-        switch(selectedRequestType) {
-            case REQUEST_FAVORITE:
-                menu.findItem(R.id.action_favorite).setChecked(true);
-                break;
-            case REQUEST_POPULAR:
-                menu.findItem(R.id.action_popular).setChecked(true);
-                break;
-            case REQUEST_TOPRATED:
-                menu.findItem(R.id.action_toprated).setChecked(true);
-                break;
-        }
     }
 
     /**
@@ -127,6 +123,42 @@ public class MovieGridActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Updates which menu item is visibly checked
+     */
+    private void updateSelectedMenuItem(Menu menu) {
+        switch(selectedRequestType) {
+            case REQUEST_FAVORITE:
+                menu.findItem(R.id.action_favorite).setChecked(true);
+                break;
+            case REQUEST_POPULAR:
+                menu.findItem(R.id.action_popular).setChecked(true);
+                break;
+            case REQUEST_TOPRATED:
+                menu.findItem(R.id.action_toprated).setChecked(true);
+                break;
+        }
+    }
+
+    /**
+     * Performs the initial configuration for the RecyclerView
+     */
+    private void configureRecyclerView() {
+        // Depending on the screen orientation we can show a different number of columns
+        //int columns = getResources().getInteger(R.integer.movie_columns);
+
+        // Initialize the layout manager and set the RecyclerView to use it
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+        recyclerView.setLayoutManager(gridLayoutManager);
+
+        // All the movie posters will be the same size
+        recyclerView.setHasFixedSize(true);
+
+        // Create the adapter and set it
+        adapter = new MovieGridAdapter();
+        recyclerView.setAdapter(adapter);
     }
 
     /**
