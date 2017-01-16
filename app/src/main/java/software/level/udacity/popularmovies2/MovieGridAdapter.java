@@ -6,25 +6,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 
+import software.level.udacity.popularmovies2.api.MovieServiceUtils;
 import software.level.udacity.popularmovies2.api.model.Movie;
 
 public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.MovieGridAdapterViewHolder> {
 
+    // Holds the movie data that is displayed in the RecyclerView
     private ArrayList<Movie> movies;
 
-    /**
-     * This gets called when each new ViewHolder is created. This happens when the RecyclerView
-     * is laid out. Enough ViewHolders will be created to fill the screen and allow for scrolling.
-     *
-     * @param parent The ViewGroup that these ViewHolders are contained within.
-     * @param viewType  If your RecyclerView has more than one type of item (which ours doesn't) you
-     *                  can use this viewType integer to provide a different layout. See
-     *                  {@link android.support.v7.widget.RecyclerView.Adapter#getItemViewType(int)}
-     *                  for more details.
-     * @return A new ViewHolder that holds the View for each list item
-     */
     @Override
     public MovieGridAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
@@ -35,33 +28,18 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
         return new MovieGridAdapterViewHolder(view);
     }
 
-    /**
-     * OnBindViewHolder is called by the RecyclerView to display the data at the specified
-     * position.
-     *
-     * @param holder The ViewHolder which should be updated to represent the
-     *                                  contents of the item at the given position in the data set.
-     * @param position                  The position of the item within the adapter's data set.
-     */
+
     @Override
     public void onBindViewHolder(MovieGridAdapterViewHolder holder, int position) {
         Movie movie = movies.get(position);
+        String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath, "w185").toString();
 
-        ImageView poster = holder.poster;
-
-//        Picasso.with(holder.poster.getContext())
-//                .load(imageURL.toString())
-//                .placeholder(R.drawable.poster_placeholder)
-//                .into(holder.poster);
-
+        Picasso.with(holder.poster.getContext())
+                .load(imageUrl)
+                .placeholder(R.drawable.poster_placeholder)
+                .into(holder.poster);
     }
 
-    /**
-     * This method simply returns the number of items to display. It is used behind the scenes
-     * to help layout our Views and for animations.
-     *
-     * @return The number of items available in our data source
-     */
     @Override
     public int getItemCount() {
         if(movies == null) {
@@ -79,10 +57,7 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
         notifyDataSetChanged();
     }
 
-    /**
-     * Viewholder class to store references to recycled views. Class also passes along the onClick
-     * event.
-     */
+
     public class MovieGridAdapterViewHolder extends RecyclerView.ViewHolder {
 
         public ImageView poster;

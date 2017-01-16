@@ -7,6 +7,8 @@ import retrofit2.Retrofit;
  */
 public class MovieServiceManager {
 
+    public static final String TAG = MovieServiceManager.class.getSimpleName();
+
     private static MovieServiceManager manager;
     private MovieService service;
 
@@ -15,7 +17,8 @@ public class MovieServiceManager {
     private MovieServiceManager() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(MOVIE_BASE_URL)
-                .addConverterFactory(NetworkManager.getConverter())
+                .addCallAdapterFactory(NetworkManager.getRxJava2CallAdapterFactory())
+                .addConverterFactory(NetworkManager.getGsonConverter())
                 .client(NetworkManager.getClient())
                 .build();
         service = retrofit.create(MovieService.class);

@@ -9,7 +9,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ProgressBar;
 
+import java.util.ArrayList;
+
 import butterknife.BindView;
+import butterknife.ButterKnife;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
+import software.level.udacity.popularmovies2.api.MovieServiceManager;
+import software.level.udacity.popularmovies2.api.model.Movie;
+import software.level.udacity.popularmovies2.api.model.MovieEnvelope;
 
 public class MovieGridActivity extends AppCompatActivity {
 
@@ -38,25 +48,7 @@ public class MovieGridActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_grid);
 
-//        String apiKey = getResources().getString(R.string.API_KEY);
-////        Call<MovieEnvelope> envelope = service.topRated(apiKey);
-//
-//        Call<MovieTrailerEnvelope> envelope = MovieServiceManager.getService().getTrailers(278, apiKey);
-//
-//
-//
-//        envelope.enqueue(new Callback<MovieTrailerEnvelope>() {
-//
-//            @Override
-//            public void onResponse(Call<MovieTrailerEnvelope> call, Response<MovieTrailerEnvelope> response) {
-//                Log.d(TAG, "onResponse: " + response.body().trailers.toString());
-//            }
-//
-//            @Override
-//            public void onFailure(Call<MovieTrailerEnvelope> call, Throwable t) {
-//
-//            }
-//        });
+        ButterKnife.bind(this);
 
         // If we have a saved request type, restore the state otherwise select the default
         if(savedInstanceState != null) {
@@ -66,11 +58,40 @@ public class MovieGridActivity extends AppCompatActivity {
         }
 
         configureRecyclerView();
+
+
+        String apiKey = getResources().getString(R.string.API_KEY);
+        Observable<MovieEnvelope> observable = MovieServiceManager.getService().getPopularMovies(apiKey);
+
+        DisposableObserver<MovieEnvelope> observer = new DisposableObserver<MovieEnvelope>() {
+            @Override
+            public void onNext(MovieEnvelope movieEnvelope) {
+                Log.d(TAG, "onNext: ");
+
+                ArrayList<Movie> data = (ArrayList<Movie>) movieEnvelope.movies;
+                adapter.setMovieData(data);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "onComplete: ");
+            }
+        };
+
+        observable.observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(observer);
+
     }
 
     /**
-     * Saves the save of the activity. Adds an integer to hold the currently selected movie
-     * request type.
+     * Saves the state of the activity. Adds an integer to hold the currently selected movie
+     * request type to the bundle that is will obtained when restoring the activity.
      *
      * @param outState The bundle that will be returned to the activity when restored
      */
@@ -126,7 +147,7 @@ public class MovieGridActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates which menu item is visibly checked
+     * Updates which menu item is visibly checked.
      */
     private void updateSelectedMenuItem(Menu menu) {
         switch(selectedRequestType) {
@@ -143,7 +164,8 @@ public class MovieGridActivity extends AppCompatActivity {
     }
 
     /**
-     * Performs the initial configuration for the RecyclerView
+     * Performs the initial configuration for the RecyclerView. Configures the RecyclerView
+     * to use a GridLayoutManager and binds the adapter class.
      */
     private void configureRecyclerView() {
         // Depending on the screen orientation we can show a different number of columns
