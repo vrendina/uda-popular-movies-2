@@ -18,7 +18,7 @@ public class PresenterManager {
     private static PresenterManager manager;
 
     // Cache to retain instances of the presenters
-    private SimpleArrayMap<String, BasePresenter> cache;
+    private SimpleArrayMap<String, Presenter> cache;
 
     // The presenter manager is initialized by the application class when the app first launches
     private PresenterManager() {}
@@ -48,11 +48,11 @@ public class PresenterManager {
      *
      * @param key The identifier for the presenter in the cache, TAG from activity
      * @param factory A PresenterFactory implementation that describes how to create the presenter
-     * @param <T> The presenter type which must extend BasePresenter
+     * @param <T> The presenter type which must extend Presenter
      * @return The presenter
      */
     @SuppressWarnings("unchecked")
-    public <T extends BasePresenter> T getPresenter(String key, PresenterFactory<T> factory) {
+    public <T extends Presenter> T getPresenter(String key, PresenterFactory<T> factory) {
 
         Log.d(TAG, "getPresenter: Obtaining presenter for " + key);
 
