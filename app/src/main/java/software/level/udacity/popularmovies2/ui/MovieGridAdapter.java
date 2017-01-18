@@ -1,4 +1,4 @@
-package software.level.udacity.popularmovies2;
+package software.level.udacity.popularmovies2.ui;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,6 +10,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.MovieServiceUtils;
 import software.level.udacity.popularmovies2.api.model.Movie;
 
@@ -56,7 +57,6 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
         movies = data;
         notifyDataSetChanged();
     }
-
 
     public class MovieGridAdapterViewHolder extends RecyclerView.ViewHolder {
 

@@ -7,8 +7,6 @@ import retrofit2.Retrofit;
  */
 public class MovieServiceManager {
 
-    public static final String TAG = MovieServiceManager.class.getSimpleName();
-
     private static MovieServiceManager manager;
     private MovieService service;
 

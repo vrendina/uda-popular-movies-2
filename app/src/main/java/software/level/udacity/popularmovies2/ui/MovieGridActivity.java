@@ -1,4 +1,4 @@
-package software.level.udacity.popularmovies2;
+package software.level.udacity.popularmovies2.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -15,8 +15,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
+import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.MovieServiceManager;
 import software.level.udacity.popularmovies2.api.model.Movie;
 import software.level.udacity.popularmovies2.api.model.MovieEnvelope;
@@ -82,6 +84,9 @@ public class MovieGridActivity extends AppCompatActivity {
                 Log.d(TAG, "onComplete: ");
             }
         };
+
+        CompositeDisposable disposable = new CompositeDisposable();
+        disposable.add(observer);
 
         observable.observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
