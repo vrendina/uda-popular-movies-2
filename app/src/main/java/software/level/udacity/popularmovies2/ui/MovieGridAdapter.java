@@ -16,8 +16,15 @@ import software.level.udacity.popularmovies2.api.model.Movie;
 
 public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.MovieGridAdapterViewHolder> {
 
-    // Holds the movie data that is displayed in the RecyclerView
+    // Movie data that is displayed in the RecyclerView
     private ArrayList<Movie> movies;
+
+    // Click handler for selection of movies
+    private MovieClickHandler clickHandler;
+
+    public MovieGridAdapter(MovieClickHandler clickHandler) {
+        this.clickHandler = clickHandler;
+    }
 
     @Override
     public MovieGridAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -58,14 +65,28 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
         notifyDataSetChanged();
     }
 
-    public class MovieGridAdapterViewHolder extends RecyclerView.ViewHolder {
+    public class MovieGridAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public ImageView poster;
 
         public MovieGridAdapterViewHolder(View view) {
             super(view);
             poster = (ImageView) view.findViewById(R.id.iv_movie_poster);
+
+            view.setOnClickListener(this);
         }
 
+        @Override
+        public void onClick(View view) {
+            Movie clickedMovie = movies.get(getAdapterPosition());
+            clickHandler.onClickMovie(clickedMovie);
+        }
+    }
+
+    /**
+     * Interface that defines what a movie click handler object should implement
+     */
+    public interface MovieClickHandler {
+        void onClickMovie(Movie movie);
     }
 }

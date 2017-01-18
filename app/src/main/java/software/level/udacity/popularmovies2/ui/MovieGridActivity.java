@@ -1,6 +1,8 @@
 package software.level.udacity.popularmovies2.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,9 +25,11 @@ import software.level.udacity.popularmovies2.api.MovieServiceManager;
 import software.level.udacity.popularmovies2.api.model.Movie;
 import software.level.udacity.popularmovies2.api.model.MovieEnvelope;
 
-public class MovieGridActivity extends AppCompatActivity {
+public class MovieGridActivity extends AppCompatActivity implements MovieGridAdapter.MovieClickHandler {
 
     public static final String TAG = MovieGridActivity.class.getSimpleName();
+
+    private MovieGridPresenter presenter;
 
     // Constants to identify the type of movie request based on what menu item is selected
     private static final String REQUEST_TYPE_KEY = "movieRequestType";
@@ -38,7 +42,6 @@ public class MovieGridActivity extends AppCompatActivity {
     // Holds the currently selected movie request type
     private int selectedRequestType = REQUEST_DEFAULT;
 
-    // View binding from Butterknife
     @BindView(R.id.rv_movie_grid) RecyclerView recyclerView;
     @BindView(R.id.pb_movies_loading) ProgressBar progressBar;
 
@@ -51,6 +54,9 @@ public class MovieGridActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movie_grid);
 
         ButterKnife.bind(this);
+
+        // Get the existing presenter or a new instance if it isn't cached
+        presenter = PresenterManager.getPresenterManager().getPresenter(TAG, presenterFactory);
 
         // If we have a saved request type, restore the state otherwise select the default
         if(savedInstanceState != null) {
@@ -92,6 +98,44 @@ public class MovieGridActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(observer);
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // When the view is about to come on screen, bind to the presenter
+        presenter.bindView(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        /*  If the view is off screen unbind from the presenter so we don't try to make any changes
+            to the UI while we aren't visible.
+        */
+        presenter.unbindView();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+    }
+
+    /**
+     * Click handler for the selection of a movie. Starts the detail activity and passes
+     * the id of the movie.
+     *
+     * @param movie Movie that was clicked
+     */
+    @Override
+    public void onClickMovie(Movie movie) {
+        Intent intent = new Intent(this, MovieDetailActivity.class);
+        intent.putExtra(Intent.EXTRA_TEXT, movie.id);
+
+        startActivity(intent);
     }
 
     /**
@@ -184,7 +228,7 @@ public class MovieGridActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
 
         // Create the adapter and set it
-        adapter = new MovieGridAdapter();
+        adapter = new MovieGridAdapter(this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -197,4 +241,17 @@ public class MovieGridActivity extends AppCompatActivity {
         selectedRequestType = requestType;
         Log.d(TAG, "fetchMovieData: Movie request type -- " + requestType);
     }
+
+    /**
+     * Factory that generates the appropriate presenter for this view.
+     */
+    private PresenterFactory<MovieGridPresenter> presenterFactory =
+            new PresenterFactory<MovieGridPresenter>() {
+                @NonNull @Override
+                public MovieGridPresenter createPresenter() {
+                    return new MovieGridPresenter();
+                }
+            };
+
+
 }
