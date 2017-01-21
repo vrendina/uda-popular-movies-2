@@ -9,7 +9,6 @@ import android.util.Log;
  *
  * Singleton class that holds references to presenters as long as they are needed to manage
  * the state of their associated view.
- *
  */
 public class PresenterManager {
 
@@ -31,48 +30,38 @@ public class PresenterManager {
     }
 
     /**
-     * Returns the instance of the presenter manager.
-     *
-     * @return The presenter manager
-     */
-    public static PresenterManager getPresenterManager() {
-        if(manager == null) {
-            initializePresenterManager();
-        }
-        return manager;
-    }
-
-    /**
      * Returns an instance of the presenter for a particular view. If the presenter
      * does not exist the factory will be used to create a new instance.
      *
      * @param key The identifier for the presenter in the cache, TAG from activity
      * @param factory A PresenterFactory implementation that describes how to create the presenter
-     * @param <T> The presenter type which must extend Presenter
      * @return The presenter
      */
     @SuppressWarnings("unchecked")
-    public <T extends Presenter> T getPresenter(String key, PresenterFactory<T> factory) {
-
-        Log.d(TAG, "getPresenter: Obtaining presenter for " + key);
-
+    public static <T extends Presenter> T getPresenter(String key, PresenterFactory<T> factory) {
         T presenter = null;
         try {
-            presenter = (T) cache.get(key);
+            presenter = (T) manager.cache.get(key);
         } catch (ClassCastException e) {
             Log.w(TAG, "getPresenter: " + e);
         }
 
         if(presenter == null) {
-            Log.d(TAG, "getPresenter: Presenter did not exist, creating new instance");
             presenter = factory.createPresenter();
-            cache.put(key, presenter);
+            manager.cache.put(key, presenter);
         }
 
         return presenter;
     }
 
-
-
-
+    /**
+     * Remove a presenter from the cache when it is no longer needed. This method should be called
+     * when the corresponding activity is destroyed and will not be recreated. This situation occurs
+     * when an activity's onDestroy method is called without first calling onSaveInstanceState.
+     *
+     * @param key The TAG of the activity used to cache the presenter
+     */
+    public static void disposePresenter(String key) {
+        manager.cache.remove(key);
+    }
 }
