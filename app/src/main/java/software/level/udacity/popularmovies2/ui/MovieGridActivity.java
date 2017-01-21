@@ -56,7 +56,7 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         ButterKnife.bind(this);
 
         // Get the existing presenter or a new instance if it isn't cached
-        presenter = PresenterManager.getPresenterManager().getPresenter(TAG, presenterFactory);
+        presenter = PresenterManager.getPresenter(TAG, presenterFactory);
 
         // If we have a saved request type, restore the state otherwise select the default
         if(savedInstanceState != null) {
@@ -100,23 +100,42 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
 
     }
 
+    /**
+     * When the view is about to come on screen, bind to the presenter so the UI can be
+     * updated.
+     */
     @Override
     protected void onStart() {
         super.onStart();
 
-        // When the view is about to come on screen, bind to the presenter
         presenter.bindView(this);
     }
 
+    /**
+     * If the view is off the screen, unbind from the presenter so the presenter doesn't try to
+     * make
+     */
     @Override
     protected void onStop() {
         super.onStop();
 
-        /*  If the view is off screen unbind from the presenter so we don't try to make any changes
-            to the UI while we aren't visible.
-        */
+        // If the view is off screen unbind from the presenter so we don't try to make any changes
+        // to the UI while we aren't visible.
         presenter.unbindView();
     }
+
+    /**
+     * If this method is called by the system, Android believes that this activity will be
+     * recreated again and some information about the state shold be saved.
+     *
+     * @param outState
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+    }
+
 
     @Override
     protected void onDestroy() {
@@ -138,17 +157,6 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         startActivity(intent);
     }
 
-    /**
-     * Saves the state of the activity. Adds an integer to hold the currently selected movie
-     * request type to the bundle that is will obtained when restoring the activity.
-     *
-     * @param outState The bundle that will be returned to the activity when restored
-     */
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt(REQUEST_TYPE_KEY, selectedRequestType);
-        super.onSaveInstanceState(outState);
-    }
 
     /**
      * Inflates the menu resource for this activity.
@@ -173,25 +181,25 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // If the item is already selected don't do anything
-        if(item.isChecked()) return false;
-
-        item.setChecked(true);
-
-        int id = item.getItemId();
-        switch(id) {
-            case R.id.action_favorite:
-                fetchMovieData(REQUEST_FAVORITE);
-                return true;
-
-            case R.id.action_popular:
-                fetchMovieData(REQUEST_POPULAR);
-                return true;
-
-            case R.id.action_toprated:
-                fetchMovieData(REQUEST_TOPRATED);
-                return true;
-        }
-
+//        if(item.isChecked()) return false;
+//
+//        item.setChecked(true);
+//
+//        int id = item.getItemId();
+//        switch(id) {
+//            case R.id.action_favorite:
+//                fetchMovieData(REQUEST_FAVORITE);
+//                return true;
+//
+//            case R.id.action_popular:
+//                fetchMovieData(REQUEST_POPULAR);
+//                return true;
+//
+//            case R.id.action_toprated:
+//                fetchMovieData(REQUEST_TOPRATED);
+//                return true;
+//        }
+//
         return super.onOptionsItemSelected(item);
     }
 
@@ -199,17 +207,17 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
      * Updates which menu item is visibly checked.
      */
     private void updateSelectedMenuItem(Menu menu) {
-        switch(selectedRequestType) {
-            case REQUEST_FAVORITE:
-                menu.findItem(R.id.action_favorite).setChecked(true);
-                break;
-            case REQUEST_POPULAR:
-                menu.findItem(R.id.action_popular).setChecked(true);
-                break;
-            case REQUEST_TOPRATED:
-                menu.findItem(R.id.action_toprated).setChecked(true);
-                break;
-        }
+//        switch(selectedRequestType) {
+//            case REQUEST_FAVORITE:
+//                menu.findItem(R.id.action_favorite).setChecked(true);
+//                break;
+//            case REQUEST_POPULAR:
+//                menu.findItem(R.id.action_popular).setChecked(true);
+//                break;
+//            case REQUEST_TOPRATED:
+//                menu.findItem(R.id.action_toprated).setChecked(true);
+//                break;
+//        }
     }
 
     /**
@@ -232,15 +240,6 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         recyclerView.setAdapter(adapter);
     }
 
-    /**
-     * Kicks off the loading of movie data
-     *
-     * @param requestType Constant to identify the type of movie request
-     */
-    private void fetchMovieData(int requestType) {
-        selectedRequestType = requestType;
-        Log.d(TAG, "fetchMovieData: Movie request type -- " + requestType);
-    }
 
     /**
      * Factory that generates the appropriate presenter for this view.
@@ -249,9 +248,8 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
             new PresenterFactory<MovieGridPresenter>() {
                 @NonNull @Override
                 public MovieGridPresenter createPresenter() {
-                    return new MovieGridPresenter();
+                    return new MovieGridPresenter(getResources().getString(R.string.API_KEY));
                 }
             };
-
 
 }
