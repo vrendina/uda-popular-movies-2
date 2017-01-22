@@ -7,9 +7,16 @@ package software.level.udacity.popularmovies2.ui;
  */
 public class Presenter<T> {
 
-    private T view;
+    public T view;
+    private String viewTag;
 
-    public void bindView(T view) { this.view = view; }
+    public void bindView(T view) {
+        this.view = view;
+        this.viewTag = view.getClass().getSimpleName();
+    }
     public void unbindView() { view = null; }
-    public void dispose() { PresenterManager.disposePresenter(view.getClass().getSimpleName()); }
+
+    public void dispose() {
+        PresenterManager.disposePresenter(viewTag);
+    }
 }
