@@ -72,7 +72,7 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
      * If this method is called by the system, Android believes that this activity will be
      * recreated again and some information about the state shold be saved.
      *
-     * @param outState
+     * @param outState Bundle where state information can be saved
      */
     @Override
     protected void onSaveInstanceState(Bundle outState) {

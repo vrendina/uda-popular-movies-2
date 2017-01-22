@@ -1,10 +1,8 @@
 package software.level.udacity.popularmovies2.ui;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -44,7 +42,7 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
      *
      * @param apiKey Required key to access to movie api
      */
-    public MovieGridPresenter(@NonNull String apiKey) {
+    public MovieGridPresenter(String apiKey) {
         this.apiKey = apiKey;
     }
 
@@ -88,13 +86,11 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
         // If the data is loading and we request the same type of data again do nothing
         if(isLoading && requestType == selectedRequestType) {
-            Log.d(TAG, "loadMovieData: Currently loading data for the selected request " + requestType);
             return;
         }
 
         // If the data is done loading and we request the same type of data again display the data immediately
         if(!isLoading && requestType == selectedRequestType) {
-            Log.d(TAG, "loadMovieData: Requested same data again we already have " + requestType);
             showData();
             return;
         }
@@ -111,8 +107,6 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
      * API or from the local database for stored favorites.
      */
     private void loadMovieData() {
-        Log.d(TAG, "loadMovieData: Obtaining data for request type " + selectedRequestType);
-
         // Dispose of any existing observables, gets rid of any pending requests
         compositeDisposable.clear();
 
@@ -120,9 +114,7 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         DisposableObserver<MovieEnvelope> observer = new MovieObserver();
         compositeDisposable.add(observer);
 
-        // A delay has been added for lifecycle testing
-        getDataObservable().delay(2, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
+        getDataObservable().observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(observer);
     }
