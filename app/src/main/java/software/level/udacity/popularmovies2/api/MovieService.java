@@ -17,11 +17,11 @@ public interface MovieService {
     Observable<MovieEnvelope> getTopRatedMovies(@Query("api_key") String apiKey);
 
     @GET("{id}")
-    Observable<MovieDetails> getMovieDetails(@Query("api_key") String apiKey);
+    Observable<MovieDetails> getMovieDetails(@Path("id") int id, @Query("api_key") String apiKey);
 
     @GET("{id}/reviews")
-    Observable<MovieReviewEnvelope> getReviews(@Path("id") int movieId, @Query("api_key") String apiKey);
+    Observable<MovieReviewEnvelope> getReviews(@Path("id") int id, @Query("api_key") String apiKey);
 
     @GET("{id}/videos")
-    Observable<MovieTrailerEnvelope> getTrailers(@Path("id") int movieId, @Query("api_key") String apiKey);
+    Observable<MovieTrailerEnvelope> getTrailers(@Path("id") int id, @Query("api_key") String apiKey);
 }
