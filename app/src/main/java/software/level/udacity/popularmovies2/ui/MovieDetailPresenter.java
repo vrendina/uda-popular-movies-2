@@ -2,7 +2,6 @@ package software.level.udacity.popularmovies2.ui;
 
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -12,7 +11,6 @@ import io.reactivex.functions.Function3;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import software.level.udacity.popularmovies2.api.MovieServiceManager;
-import software.level.udacity.popularmovies2.api.model.Movie;
 import software.level.udacity.popularmovies2.api.model.MovieDetails;
 import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
 import software.level.udacity.popularmovies2.api.model.MovieReviewEnvelope;
@@ -35,7 +33,7 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     // Movie data that is pushed to the RecyclerView
-    private ArrayList<Movie> movieData = new ArrayList<>();
+    private MovieDetailsComposite data;
 
     /**
      * Creates a new instance of the presenter.
@@ -59,7 +57,7 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
         }
 
         // If we don't have any movie data and aren't trying to load any force the loading
-        if(movieData.isEmpty()) {
+        if(data == null) {
             loadMovieData();
             return;
         }
@@ -122,7 +120,7 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
      */
     private void showData() {
         if(view != null) {
-            view.updateData(movieData);
+            view.updateData(data);
             view.hideLoading();
         }
     }
@@ -137,7 +135,8 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
         }
 
         @Override
-        public void onNext(MovieDetailsComposite data) {
+        public void onNext(MovieDetailsComposite composite) {
+            data = composite;
             Log.d(TAG, "onNext: " + data.details.toString() + data.reviewEnvelope.reviews.toString() + data.trailerEnvelope.trailers.toString());
         }
 

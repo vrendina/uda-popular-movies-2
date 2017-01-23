@@ -4,18 +4,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import software.level.udacity.popularmovies2.R;
-import software.level.udacity.popularmovies2.api.model.Movie;
+import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
 
 public class MovieDetailActivity extends AppCompatActivity {
 
@@ -25,6 +24,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     @BindView(R.id.pb_movie_details_loading) ProgressBar progressBar;
 
     private MovieDetailPresenter presenter;
+    private MovieDetailAdapter adapter;
 
     // If the activity is going to be destroyed and the system does not expect to recreate it
     private boolean activityIsFinished = true;
@@ -38,6 +38,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         // Get the existing presenter or a new instance if it isn't cached
         presenter = PresenterManager.getPresenter(TAG, presenterFactory);
+
+        configureRecyclerView();
     }
 
     /**
@@ -87,6 +89,20 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Performs the initial configuration for the RecyclerView. Configures the RecyclerView
+     * to use a LinearLayoutManager and binds the adapter class.
+     */
+    private void configureRecyclerView() {
+        // Initialize the layout manager and set the RecyclerView to use it
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        // Create the adapter and set it
+        adapter = new MovieDetailAdapter();
+        recyclerView.setAdapter(adapter);
+    }
+
     public void showLoading() {
         recyclerView.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.VISIBLE);
@@ -97,8 +113,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         recyclerView.setVisibility(View.VISIBLE);
     }
 
-    public void updateData(ArrayList<Movie> movieData) {
-        //adapter.setMovieData(movieData);
+    public void updateData(MovieDetailsComposite data) {
+        adapter.setMovieData(data);
     }
 
     public void showError() {
