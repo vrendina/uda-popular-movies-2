@@ -1,10 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorLightGray">
 
     <TextView
-        android:text="TextView"
+        tools:text="Overview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView" />
-</FrameLayout>
+        android:id="@+id/tv_overview_title"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintLeft_toLeftOf="@+id/linearLayout"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <TextView
+        tools:text="Runtime: 120 min"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_runtime"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/iv_movie_poster"
+        app:layout_constraintLeft_toRightOf="@+id/iv_movie_poster"
+        app:layout_constraintRight_toLeftOf="@+id/iv_movie_poster"
+        android:paddingBottom="16dp" />
+
+    <TextView
+        tools:text="Suicide Squad (2016)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_movie_title"
+        android:textColor="@color/colorPrimaryDark"
+        tools:layout_constraintTop_creator="1"
+        tools:layout_constraintLeft_creator="1"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+
+    <ImageView
+        android:layout_width="105dp"
+        android:layout_height="157dp"
+        tools:src="@drawable/suicide_squad_w185"
+        android:id="@+id/iv_movie_poster"
+        app:layout_constraintTop_toBottomOf="@+id/tv_movie_title"
+        app:layout_constraintLeft_toLeftOf="@+id/tv_movie_title"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        tools:text="From DC Comics comes the Suicide Squad, an antihero team of incarcerated supervillains who act as deniable assets for the United States government, undertaking high-risk black ops missions in exchange for commuted prison sentences."
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_overview"
+        app:layout_constraintLeft_toLeftOf="@+id/tv_overview_title"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_overview_title"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginRight="16dp"
+        android:layout_width="0dp"
+        android:paddingBottom="16dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_rect_shape"
+        android:layout_marginStart="8dp"
+        app:layout_constraintTop_toTopOf="@+id/iv_movie_poster"
+        app:layout_constraintLeft_toRightOf="@+id/iv_movie_poster"
+        android:layout_marginLeft="8dp"
+        android:id="@+id/linearLayout">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_star_white_24dp"
+            android:id="@+id/iv_star"
+            android:tint="@color/colorLightGray"
+            android:layout_weight="1"
+            android:padding="2dp" />
+
+        <TextView
+            tools:text="5.9"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/tv_rating"
+            android:textColor="@color/colorLightGray"
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+            android:layout_weight="1"
+            android:padding="4dp"
+            android:gravity="center"
+            android:layout_marginEnd="2dp" />
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
