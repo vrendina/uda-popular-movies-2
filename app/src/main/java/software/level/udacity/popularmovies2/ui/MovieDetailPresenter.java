@@ -99,7 +99,7 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
             }
         });
 
-        combined.delay(5, TimeUnit.SECONDS)
+        combined.delay(0, TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(observer);
