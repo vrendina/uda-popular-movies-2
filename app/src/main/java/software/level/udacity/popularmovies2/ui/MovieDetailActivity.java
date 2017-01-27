@@ -1,9 +1,11 @@
 package software.level.udacity.popularmovies2.ui;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -92,7 +94,15 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
 
     @Override
     public void onTrailerClick(MovieTrailer trailer) {
-        Log.d(TAG, "onTrailerClick: " + trailer);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.parse("vnd.youtube:" + trailer.key), "video/*");
+
+        // If the YouTube app is not installed, fall back on the browser
+        if(intent.resolveActivity(getPackageManager()) == null) {
+            intent.setData(Uri.parse("https://youtu.be/" + trailer.key));
+        }
+
+        startActivity(Intent.createChooser(intent, getString(R.string.trailer_chooser)));
     }
 
     /**
@@ -107,6 +117,11 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         // Create the adapter and set it
         adapter = new MovieDetailAdapter(this);
         recyclerView.setAdapter(adapter);
+
+        // Add dividers
+        DividerItemDecoration decoration = new DividerItemDecoration(recyclerView.getContext(),
+                linearLayoutManager.getOrientation());
+        recyclerView.addItemDecoration(decoration);
     }
 
     public void showLoading() {
