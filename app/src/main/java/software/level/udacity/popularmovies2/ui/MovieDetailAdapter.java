@@ -11,10 +11,13 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.Locale;
+
 import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.MovieServiceUtils;
 import software.level.udacity.popularmovies2.api.model.MovieDetails;
 import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
+import software.level.udacity.popularmovies2.api.model.MovieReview;
 import software.level.udacity.popularmovies2.api.model.MovieTrailer;
 
 public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -26,9 +29,16 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private int trailerCount = 0;
     private int reviewCount = 0;
 
+    private MovieTrailerOnClickHandler clickHandler;
+
     private static final int VIEW_HEADER = 100;
     private static final int VIEW_TRAILER = 101;
     private static final int VIEW_REVIEW = 102;
+
+
+    public MovieDetailAdapter(MovieTrailerOnClickHandler clickHandler) {
+        this.clickHandler = clickHandler;
+    }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -63,16 +73,14 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         } else if(untypedHolder instanceof MovieTrailerViewHolder) {
 
-            try {
-                MovieTrailer trailer = data.trailerEnvelope.trailers.get(position - 1);
-                bindTrailerViewHolder((MovieTrailerViewHolder) untypedHolder, trailer);
-            } catch (IndexOutOfBoundsException e) {
-                Log.e(TAG, "onBindViewHolder: Requested trailer out of array bounds", e);
-            }
+            int trailerPosition = position - 1;
+            bindTrailerViewHolder((MovieTrailerViewHolder) untypedHolder, trailerPosition);
 
         } else if(untypedHolder instanceof MovieReviewViewHolder) {
 
-            MovieReviewViewHolder holder = (MovieReviewViewHolder) untypedHolder;
+            int reviewPosition = position - trailerCount - 1;
+
+            bindReviewViewHolder((MovieReviewViewHolder) untypedHolder, reviewPosition);
 
         }
     }
@@ -81,7 +89,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public int getItemViewType(int position) {
         if(position == 0) {
             return VIEW_HEADER;
-        } else if(position > 0 && position < trailerCount) {
+        } else if(position > 0 && position <= trailerCount) {
             return VIEW_TRAILER;
         }
         return VIEW_REVIEW;
@@ -113,7 +121,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 Integer.valueOf(data.details.releaseDate.split("-")[0])));
 
         // Set the rating
-        holder.rating.setText(movie.voteAverage.toString());
+        holder.rating.setText(String.format(Locale.ENGLISH, "%.1f", movie.voteAverage));
 
         // Set the runtime
         holder.runtime.setText(String.format(context.getString(R.string.details_movie_runtime),
@@ -131,26 +139,55 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 .into(holder.poster);
     }
 
-    private void bindTrailerViewHolder(MovieTrailerViewHolder holder, MovieTrailer trailer) {
+    private void bindTrailerViewHolder(MovieTrailerViewHolder holder, int trailerPosition) {
         Context context = holder.itemView.getContext();
 
-        holder.title.setText(trailer.name);
+        try {
+            MovieTrailer trailer = data.trailerEnvelope.trailers.get(trailerPosition);
 
-        String size = "HD";
-        if(trailer.size < 720) {
-            size = "SD";
+            // Set the title of the trailer
+            holder.title.setText(trailer.name);
+
+            // Set the video size (standard definition if less than 720p)
+            String size = context.getString(R.string.trailer_high_definition);
+            if (trailer.size < 720) {
+                size = context.getString(R.string.trailer_standard_definition);
+            }
+
+            holder.size.setText(String.format(context.getString(R.string.trailer_size),
+                    size, trailer.size));
+
+            holder.itemView.setTag(trailerPosition);
+
+        } catch (IndexOutOfBoundsException e) {
+            Log.e(TAG, "onBindViewHolder: Requested trailer out of array bounds", e);
         }
+    }
 
-        holder.size.setText(String.format(context.getResources().getString(R.string.trailer_size),
-                size, trailer.size));
+    private void bindReviewViewHolder(MovieReviewViewHolder holder, int reviewPosition) {
+        Context context = holder.itemView.getContext();
+
+        try {
+            MovieReview review = data.reviewEnvelope.reviews.get(reviewPosition);
+
+            // Set the author header
+            holder.title.setText(String.format(context.getString(R.string.review_title),
+                    review.author));
+
+            // Set the content of the review
+            holder.review.setText(review.content);
+
+        } catch (IndexOutOfBoundsException e) {
+            Log.e(TAG, "onBindViewHolder: Requested review out of array bounds", e);
+        }
     }
 
     private class MovieDetailHeaderViewHolder extends RecyclerView.ViewHolder {
 
-        TextView title;
-        TextView rating;
-        TextView runtime;
-        TextView overview;
+        final TextView title;
+        final TextView rating;
+        final TextView runtime;
+        final TextView overview;
 
         ImageView poster;
 
@@ -166,29 +203,44 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    private class MovieTrailerViewHolder extends RecyclerView.ViewHolder {
+    private class MovieTrailerViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView title;
-        TextView size;
+        final TextView title;
+        final TextView size;
 
-        public MovieTrailerViewHolder(View view) {
+        MovieTrailerViewHolder(View view) {
             super(view);
 
             title = (TextView) view.findViewById(R.id.tv_trailer_title);
             size = (TextView) view.findViewById(R.id.tv_trailer_size);
+
+            view.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int trailerPosition = (int) view.getTag();
+            clickHandler.onTrailerClick(data.trailerEnvelope.trailers.get(trailerPosition));
         }
     }
 
     private class MovieReviewViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView title;
+        final TextView title;
+        final TextView review;
 
-        public MovieReviewViewHolder(View view) {
+        MovieReviewViewHolder(View view) {
             super(view);
 
-            title = (TextView) view.findViewById(R.id.textView);
+            title = (TextView) view.findViewById(R.id.tv_review_title);
+            review = (TextView) view.findViewById(R.id.tv_review);
+
         }
     }
 
+
+    public interface MovieTrailerOnClickHandler {
+        void onTrailerClick(MovieTrailer trailer);
+    }
 
 }

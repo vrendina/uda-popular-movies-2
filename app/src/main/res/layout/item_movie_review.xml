@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <TextView
-        android:text="TextView"
+        tools:text="A review by Rangan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView" />
-</FrameLayout>
+        android:id="@+id/tv_review_title"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:paddingBottom="8dp" />
+
+    <TextView
+        tools:text="They are not superheroes, they are supervillains.
+
+It's nothing against DC, but overall I'm starting to think the todays cinema is getting crowded with the lots of superheroes. Just like any pollution or the over population on the earth's surface. It needs stability, but nobody cares about it other than money making agenda. I also think it's going to last for only a few more years, when this trend going to end like that happened in the 70s, 80s and the 90s. And the space travel era to begin which is already kick- started. So DC or Marvel and others, they should be careful, for far they could take their products.
+"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_review"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+</LinearLayout>

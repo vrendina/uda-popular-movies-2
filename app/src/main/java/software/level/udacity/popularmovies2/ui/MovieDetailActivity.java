@@ -15,8 +15,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
+import software.level.udacity.popularmovies2.api.model.MovieTrailer;
 
-public class MovieDetailActivity extends AppCompatActivity {
+public class MovieDetailActivity extends AppCompatActivity implements MovieDetailAdapter.MovieTrailerOnClickHandler {
 
     public static final String TAG = MovieDetailActivity.class.getSimpleName();
 
@@ -89,6 +90,11 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onTrailerClick(MovieTrailer trailer) {
+        Log.d(TAG, "onTrailerClick: " + trailer);
+    }
+
     /**
      * Performs the initial configuration for the RecyclerView. Configures the RecyclerView
      * to use a LinearLayoutManager and binds the adapter class.
@@ -99,7 +105,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // Create the adapter and set it
-        adapter = new MovieDetailAdapter();
+        adapter = new MovieDetailAdapter(this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -132,4 +138,6 @@ public class MovieDetailActivity extends AppCompatActivity {
                     getIntent().getIntExtra(Intent.EXTRA_TEXT, -1));
         }
     };
+
+
 }
