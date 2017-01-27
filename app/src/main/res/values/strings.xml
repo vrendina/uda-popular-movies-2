@@ -12,6 +12,7 @@
     <string name="trailer_size">%1$s (%2$dp)</string>
     <string name="trailer_high_definition">HD</string>
     <string name="trailer_standard_definition">SD</string>
+    <string name="trailer_chooser">Play video using...</string>
 
     <string name="review_title">A review by %1$s</string>
 </resources>

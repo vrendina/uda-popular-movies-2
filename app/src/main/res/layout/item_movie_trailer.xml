@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -10,7 +11,7 @@
         android:id="@+id/iv_youtube"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_margin="32dp"
+        android:layout_margin="16dp"
         android:tint="@color/colorPrimary" />
 
     <LinearLayout
@@ -34,6 +35,7 @@
             android:id="@+id/tv_trailer_size"
             android:layout_weight="0"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+
     </LinearLayout>
 
 </LinearLayout>
