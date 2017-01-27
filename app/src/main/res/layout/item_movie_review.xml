@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/tv_review_title"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:paddingTop="8dp"
         android:paddingBottom="8dp" />
 
     <TextView
