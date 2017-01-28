@@ -19,7 +19,7 @@ import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
 import software.level.udacity.popularmovies2.api.model.MovieTrailer;
 
-public class MovieDetailActivity extends AppCompatActivity implements MovieDetailAdapter.MovieTrailerOnClickHandler {
+public class MovieDetailActivity extends AppCompatActivity implements MovieDetailAdapter.MovieOnClickHandler {
 
     public static final String TAG = MovieDetailActivity.class.getSimpleName();
 
@@ -43,6 +43,13 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         presenter = PresenterManager.getPresenter(TAG, presenterFactory);
 
         configureRecyclerView();
+
+
+//        ContentValues values = new ContentValues();
+//
+//        values.put(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID, 1234);
+//        getContentResolver().insert(MovieContract.MovieFavoriteEntry.CONTENT_URI, values);
+
     }
 
     /**
@@ -93,7 +100,7 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     }
 
     @Override
-    public void onTrailerClick(MovieTrailer trailer) {
+    public void onTrailerClickPlay(MovieTrailer trailer) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.parse("vnd.youtube:" + trailer.key), "video/*");
 
@@ -103,6 +110,15 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         }
 
         startActivity(Intent.createChooser(intent, getString(R.string.trailer_chooser)));
+    }
+
+    @Override
+    public void onTrailerClickShare(MovieTrailer trailer) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+
+        intent.putExtra(Intent.EXTRA_TEXT, "https://youtu.be/" + trailer.key);
+        startActivity(Intent.createChooser(intent, getString(R.string.trailer_share_chooser)));
     }
 
     /**

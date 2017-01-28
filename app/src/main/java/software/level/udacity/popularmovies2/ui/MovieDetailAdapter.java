@@ -29,14 +29,14 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private int trailerCount = 0;
     private int reviewCount = 0;
 
-    private MovieTrailerOnClickHandler clickHandler;
+    private MovieOnClickHandler clickHandler;
 
     private static final int VIEW_HEADER = 100;
     private static final int VIEW_TRAILER = 101;
     private static final int VIEW_REVIEW = 102;
 
 
-    public MovieDetailAdapter(MovieTrailerOnClickHandler clickHandler) {
+    public MovieDetailAdapter(MovieOnClickHandler clickHandler) {
         this.clickHandler = clickHandler;
     }
 
@@ -73,13 +73,12 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         } else if(untypedHolder instanceof MovieTrailerViewHolder) {
 
-            int trailerPosition = position - 1;
+            int trailerPosition = getTrailerPositionFromAdapterPosition(position);
             bindTrailerViewHolder((MovieTrailerViewHolder) untypedHolder, trailerPosition);
 
         } else if(untypedHolder instanceof MovieReviewViewHolder) {
 
-            int reviewPosition = position - trailerCount - 1;
-
+            int reviewPosition = getReviewPositionFromAdapterPosition(position);
             bindReviewViewHolder((MovieReviewViewHolder) untypedHolder, reviewPosition);
 
         }
@@ -110,6 +109,14 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         this.reviewCount = data.reviewEnvelope.reviews.size();
 
         notifyDataSetChanged();
+    }
+
+    private int getTrailerPositionFromAdapterPosition(int adapterPosition) {
+        return adapterPosition - 1;
+    }
+
+    private int getReviewPositionFromAdapterPosition(int adapterPosition) {
+        return adapterPosition - trailerCount - 1;
     }
 
     private void bindHeaderViewHolder(MovieDetailHeaderViewHolder holder, MovieDetails movie) {
@@ -157,8 +164,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             holder.size.setText(String.format(context.getString(R.string.trailer_size),
                     size, trailer.size));
 
-            holder.itemView.setTag(trailerPosition);
-
         } catch (IndexOutOfBoundsException e) {
             Log.e(TAG, "onBindViewHolder: Requested trailer out of array bounds", e);
         }
@@ -203,24 +208,35 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    private class MovieTrailerViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private class MovieTrailerViewHolder extends RecyclerView.ViewHolder {
 
         final TextView title;
         final TextView size;
+        final ImageView share;
 
         MovieTrailerViewHolder(View view) {
             super(view);
 
             title = (TextView) view.findViewById(R.id.tv_trailer_title);
             size = (TextView) view.findViewById(R.id.tv_trailer_size);
+            share = (ImageView) view.findViewById(R.id.iv_share);
 
-            view.setOnClickListener(this);
-        }
 
-        @Override
-        public void onClick(View view) {
-            int trailerPosition = (int) view.getTag();
-            clickHandler.onTrailerClick(data.trailerEnvelope.trailers.get(trailerPosition));
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getTrailerPositionFromAdapterPosition(getAdapterPosition());
+                    clickHandler.onTrailerClickPlay(data.trailerEnvelope.trailers.get(position));
+                }
+            });
+
+            share.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getTrailerPositionFromAdapterPosition(getAdapterPosition());
+                    clickHandler.onTrailerClickShare(data.trailerEnvelope.trailers.get(position));
+                }
+            });
         }
     }
 
@@ -234,13 +250,13 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             title = (TextView) view.findViewById(R.id.tv_review_title);
             review = (TextView) view.findViewById(R.id.tv_review);
-
         }
     }
 
-
-    public interface MovieTrailerOnClickHandler {
-        void onTrailerClick(MovieTrailer trailer);
+    public interface MovieOnClickHandler {
+        void onTrailerClickPlay(MovieTrailer trailer);
+        void onTrailerClickShare(MovieTrailer trailer);
     }
+
 
 }

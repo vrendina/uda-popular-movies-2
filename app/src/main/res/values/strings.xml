@@ -15,6 +15,10 @@
     <string name="trailer_high_definition">HD</string>
     <string name="trailer_standard_definition">SD</string>
     <string name="trailer_chooser">Play video using…</string>
+    <string name="trailer_share_chooser">Share video with…</string>
 
     <string name="review_title">A review by %1$s</string>
+
+    <string name="favorite_add">Add Favorite</string>
+    <string name="favorite_remove">Remove Favorite</string>
 </resources>
