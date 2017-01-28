@@ -24,8 +24,6 @@ public class MovieApplication extends Application {
         if(BuildConfig.DEBUG) {
             Stetho.initializeWithDefaults(this);
         }
-
-
     }
 
 }
