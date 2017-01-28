@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Popular Movies</string>
 
+    <string name="content_authority">software.level.udacity.popularmovies2</string>
+
     <string name="menu_title_popular">Popular</string>
     <string name="menu_title_toprated">Top Rated</string>
     <string name="menu_title_favorite">Favorites</string>
@@ -12,7 +14,7 @@
     <string name="trailer_size">%1$s (%2$dp)</string>
     <string name="trailer_high_definition">HD</string>
     <string name="trailer_standard_definition">SD</string>
-    <string name="trailer_chooser">Play video using...</string>
+    <string name="trailer_chooser">Play video using…</string>
 
     <string name="review_title">A review by %1$s</string>
 </resources>
