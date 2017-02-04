@@ -27,7 +27,7 @@ public class MovieProvider extends ContentProvider {
                 CODE_FAVORITES);
 
         // content://software.level.udacity.popularmovies2/favorites/#
-        matcher.addURI(MovieContract.CONTENT_AUTHORITY + "/#", MovieContract.PATH_FAVORITES,
+        matcher.addURI(MovieContract.CONTENT_AUTHORITY, MovieContract.PATH_FAVORITES + "/#",
                 CODE_FAVORITES_WITH_ID);
     }
 
