@@ -40,7 +40,8 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
     @Override
     public void onBindViewHolder(MovieGridAdapterViewHolder holder, int position) {
         Movie movie = movies.get(position);
-        String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath, "w185").toString();
+        String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath,
+                holder.poster.getContext().getString(R.string.poster_size)).toString();
 
         Picasso.with(holder.poster.getContext())
                 .load(imageUrl)

@@ -3,6 +3,8 @@
 
     <string name="content_authority">software.level.udacity.popularmovies2</string>
 
+    <string name="poster_size">w185</string>
+
     <string name="menu_title_popular">Popular</string>
     <string name="menu_title_toprated">Top Rated</string>
     <string name="menu_title_favorite">Favorites</string>

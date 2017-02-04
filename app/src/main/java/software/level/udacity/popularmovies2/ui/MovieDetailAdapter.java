@@ -131,7 +131,8 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         // If there is no image data saved, load it from the web
         } else {
-            String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath, "w185").toString();
+            String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath,
+                    poster.getContext().getString(R.string.poster_size)).toString();
 
             Picasso.with(poster.getContext())
                     .load(imageUrl)
