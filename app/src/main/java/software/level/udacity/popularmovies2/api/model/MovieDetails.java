@@ -67,6 +67,9 @@ public class MovieDetails {
     @SerializedName("vote_count")
     public Integer voteCount;
 
+    // If the movie is added to the list of favorites this will be true
+    public boolean favorite = false;
+
     @Override
     public String toString() {
         return title;

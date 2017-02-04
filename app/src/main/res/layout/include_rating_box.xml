@@ -14,7 +14,6 @@
         app:srcCompat="@drawable/ic_star_white_24dp"
         android:id="@+id/iv_star"
         android:tint="@color/colorLightGray"
-        android:layout_weight="1"
         android:padding="2dp" />
 
     <TextView
@@ -24,10 +23,8 @@
         android:id="@+id/tv_rating"
         android:textColor="@color/colorLightGray"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-        android:layout_weight="1"
-        android:padding="4dp"
         android:gravity="center"
-        android:layout_marginEnd="2dp"
-        android:layout_marginRight="2dp"/>
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"/>
 
 </LinearLayout>

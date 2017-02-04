@@ -107,6 +107,14 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
     }
 
     /**
+     * If the movie is a favorite already then remove it from the favorites. Otherwise add the movie
+     * to the list of favorites.
+     */
+    public void saveMovieData() {
+        Log.d(TAG, "saveMovieData: ");
+    }
+
+    /**
      * Tells the view to show a loading state.
      */
     private void showLoading() {

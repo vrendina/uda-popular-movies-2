@@ -76,7 +76,7 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
 
     /**
      * If this method is called by the system, Android believes that this activity will be
-     * recreated again and some information about the state shold be saved.
+     * recreated again and some information about the state should be saved.
      *
      * @param outState Bundle where state information can be saved
      */
@@ -92,8 +92,6 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         super.onDestroy();
 
         if(activityIsFinished) {
-            Log.d(TAG, "onDestroy: Instance of this activity is finished");
-
             presenter.dispose();
         }
 
@@ -119,6 +117,16 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
 
         intent.putExtra(Intent.EXTRA_TEXT, "https://youtu.be/" + trailer.key);
         startActivity(Intent.createChooser(intent, getString(R.string.trailer_share_chooser)));
+    }
+
+    @Override
+    public void onClickSetFavorite() {
+        Log.d(TAG, "onClickSetFavorite:");
+    }
+
+    @Override
+    public void onClickRemoveFavorite() {
+        Log.d(TAG, "onClickRemoveFavorite: ");
     }
 
     /**

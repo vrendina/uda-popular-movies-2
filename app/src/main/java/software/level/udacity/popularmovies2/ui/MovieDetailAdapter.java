@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -34,7 +35,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private static final int VIEW_HEADER = 100;
     private static final int VIEW_TRAILER = 101;
     private static final int VIEW_REVIEW = 102;
-
 
     public MovieDetailAdapter(MovieOnClickHandler clickHandler) {
         this.clickHandler = clickHandler;
@@ -130,6 +130,16 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         // Set the rating
         holder.rating.setText(String.format(Locale.ENGLISH, "%.1f", movie.voteAverage));
 
+        // Set the favorite text and icon
+        if(movie.favorite) {
+            holder.favorite.setText(context.getString(R.string.favorite_remove));
+            //holder.heart.setImageDrawable(context.getDrawable(getReso R.drawable.ic_favorite_white_24dp));
+
+
+        } else {
+            holder.favorite.setText(context.getString(R.string.favorite_add));
+        }
+
         // Set the runtime
         holder.runtime.setText(String.format(context.getString(R.string.details_movie_runtime),
                 movie.runtime));
@@ -191,20 +201,47 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         final TextView title;
         final TextView rating;
+        final TextView favorite;
         final TextView runtime;
         final TextView overview;
 
-        ImageView poster;
+        final ImageView poster;
+        final ImageView heart;
+
+        final LinearLayout favoriteButton;
 
         MovieDetailHeaderViewHolder(View view) {
             super(view);
 
             title = (TextView) view.findViewById(R.id.tv_movie_title);
+            favorite = (TextView) view.findViewById(R.id.tv_favorite);
             rating = (TextView) view.findViewById(R.id.tv_rating);
             runtime = (TextView) view.findViewById(R.id.tv_runtime);
             overview = (TextView) view.findViewById(R.id.tv_overview);
 
             poster = (ImageView) view.findViewById(R.id.iv_movie_poster);
+            heart = (ImageView) view.findViewById(R.id.iv_favorite_heart);
+
+            favoriteButton = (LinearLayout) view.findViewById(R.id.ll_favorite_button);
+
+            favoriteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(data.details.favorite) {
+                        favorite.setText(v.getContext().getString(R.string.favorite_add));
+                        heart.setImageResource(R.drawable.ic_favorite_border_white_24dp);
+
+                        data.details.favorite = false;
+                        clickHandler.onClickRemoveFavorite();
+                    } else {
+                        favorite.setText(v.getContext().getString(R.string.favorite_remove));
+                        heart.setImageResource(R.drawable.ic_favorite_white_24dp);
+
+                        data.details.favorite = true;
+                        clickHandler.onClickSetFavorite();
+                    }
+                }
+            });
         }
     }
 
@@ -254,6 +291,8 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public interface MovieOnClickHandler {
+        void onClickSetFavorite();
+        void onClickRemoveFavorite();
         void onTrailerClickPlay(MovieTrailer trailer);
         void onTrailerClickShare(MovieTrailer trailer);
     }
