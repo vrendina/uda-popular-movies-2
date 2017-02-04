@@ -1,8 +1,11 @@
 package software.level.udacity.popularmovies2.api;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -20,7 +23,7 @@ public class MovieServiceUtils {
      * @return URL for downloading image
      */
     public static URL buildImageURL(String path, String size) {
-        // Strip any preceeding slash out of the path
+        // Strip any preceding slash out of the path
         path = path.replace("/", "");
 
         Uri uri = Uri.parse(MOVIE_IMAGE_BASE_URL)
@@ -37,5 +40,16 @@ public class MovieServiceUtils {
         }
 
         return url;
+    }
+
+    public static byte[] encodeImageData(Bitmap image) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.PNG, 0, stream);
+
+        return stream.toByteArray();
+    }
+
+    public static Bitmap decodeImageData(byte[] image) {
+        return BitmapFactory.decodeByteArray(image, 0, image.length);
     }
 }

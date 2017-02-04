@@ -1,6 +1,9 @@
 package software.level.udacity.popularmovies2.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -119,6 +122,24 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return adapterPosition - trailerCount - 1;
     }
 
+    private void loadPosterImage(ImageView poster, MovieDetails movie) {
+        // If we have image data in the database decode it and display it
+        if(movie.encodedPoster != null) {
+            Log.d(TAG, "bindHeaderViewHolder: Decoding image data!");
+            Bitmap bitmap = MovieServiceUtils.decodeImageData(movie.encodedPoster);
+            poster.setImageBitmap(bitmap);
+
+        // If there is no image data saved, load it from the web
+        } else {
+            String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath, "w185").toString();
+
+            Picasso.with(poster.getContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.poster_placeholder)
+                    .into(poster);
+        }
+    }
+
     private void bindHeaderViewHolder(MovieDetailHeaderViewHolder holder, MovieDetails movie) {
         Context context = holder.itemView.getContext();
 
@@ -130,16 +151,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         // Set the rating
         holder.rating.setText(String.format(Locale.ENGLISH, "%.1f", movie.voteAverage));
 
-        // Set the favorite text and icon
-        if(movie.favorite) {
-            holder.favorite.setText(context.getString(R.string.favorite_remove));
-            //holder.heart.setImageDrawable(context.getDrawable(getReso R.drawable.ic_favorite_white_24dp));
-
-
-        } else {
-            holder.favorite.setText(context.getString(R.string.favorite_add));
-        }
-
         // Set the runtime
         holder.runtime.setText(String.format(context.getString(R.string.details_movie_runtime),
                 movie.runtime));
@@ -147,13 +158,17 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         // Set the overview
         holder.overview.setText(movie.overview);
 
-        // Set the poster image
-        String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath, "w185").toString();
+        // If the movie is a favorite set up the button appropriately
+        if(movie.favorite) {
+            holder.favorite.setText(context.getString(R.string.favorite_remove));
+            holder.heart.setImageResource(R.drawable.ic_favorite_white_24dp);
+        } else {
+            holder.favorite.setText(context.getString(R.string.favorite_add));
+            holder.heart.setImageResource(R.drawable.ic_favorite_border_white_24dp);
+        }
 
-        Picasso.with(context)
-                .load(imageUrl)
-                .placeholder(R.drawable.poster_placeholder)
-                .into(holder.poster);
+        // Load the poster image
+        loadPosterImage(holder.poster, movie);
     }
 
     private void bindTrailerViewHolder(MovieTrailerViewHolder holder, int trailerPosition) {
@@ -226,19 +241,30 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             favoriteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
+                public void onClick(View view) {
+
+                    // If we already are a favorite movie remove it from the database
                     if(data.details.favorite) {
-                        favorite.setText(v.getContext().getString(R.string.favorite_add));
-                        heart.setImageResource(R.drawable.ic_favorite_border_white_24dp);
 
-                        data.details.favorite = false;
                         clickHandler.onClickRemoveFavorite();
-                    } else {
-                        favorite.setText(v.getContext().getString(R.string.favorite_remove));
-                        heart.setImageResource(R.drawable.ic_favorite_white_24dp);
+                        notifyItemChanged(getAdapterPosition());
 
-                        data.details.favorite = true;
-                        clickHandler.onClickSetFavorite();
+                    // Add the movie as a favorite
+                    } else {
+
+                        Drawable drawable = poster.getDrawable();
+
+                        // If we have a bitmap drawable set for the encodedPoster, save the data
+                        if(drawable instanceof BitmapDrawable) {
+                            Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+                            clickHandler.onClickSetFavorite(bitmap);
+
+                        // Don't save any image data if we don't have the bitmap set
+                        } else {
+                            clickHandler.onClickSetFavorite(null);
+                        }
+
+                        notifyItemChanged(getAdapterPosition());
                     }
                 }
             });
@@ -291,7 +317,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public interface MovieOnClickHandler {
-        void onClickSetFavorite();
+        void onClickSetFavorite(Bitmap poster);
         void onClickRemoveFavorite();
         void onTrailerClickPlay(MovieTrailer trailer);
         void onTrailerClickShare(MovieTrailer trailer);

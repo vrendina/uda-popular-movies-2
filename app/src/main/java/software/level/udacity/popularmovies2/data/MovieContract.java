@@ -30,6 +30,7 @@ public class MovieContract {
         public static final String COLUMN_RELEASEDATE = "release_date";
         public static final String COLUMN_RATING = "vote_average";
         public static final String COLUMN_RUNTIME = "runtime";
-        public static final String COLUMN_POSTER = "poster";
+        public static final String COLUMN_POSTER = "encoded_poster";
+        public static final String COLUMN_POSTERPATH = "poster_path";
     }
 }

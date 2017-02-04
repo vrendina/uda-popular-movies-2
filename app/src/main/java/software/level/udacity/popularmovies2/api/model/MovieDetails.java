@@ -70,6 +70,9 @@ public class MovieDetails {
     // If the movie is added to the list of favorites this will be true
     public boolean favorite = false;
 
+    // Holds the byte array that contains to the movie encodedPoster image
+    public byte[] encodedPoster;
+
     @Override
     public String toString() {
         return title;

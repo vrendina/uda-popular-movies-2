@@ -43,6 +43,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
     <ImageView
+        app:srcCompat="@drawable/poster_placeholder"
         android:layout_width="105dp"
         android:layout_height="157dp"
         tools:src="@drawable/suicide_squad_w185"

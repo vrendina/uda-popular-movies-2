@@ -1,6 +1,7 @@
 package software.level.udacity.popularmovies2.ui;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -8,7 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -120,13 +121,13 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     }
 
     @Override
-    public void onClickSetFavorite() {
-        Log.d(TAG, "onClickSetFavorite:");
+    public void onClickSetFavorite(Bitmap poster) {
+        presenter.setFavorite(poster);
     }
 
     @Override
     public void onClickRemoveFavorite() {
-        Log.d(TAG, "onClickRemoveFavorite: ");
+        presenter.removeFavorite();
     }
 
     /**
@@ -146,6 +147,9 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         DividerItemDecoration decoration = new DividerItemDecoration(recyclerView.getContext(),
                 linearLayoutManager.getOrientation());
         recyclerView.addItemDecoration(decoration);
+
+        // Don't show the change animation -- this gets rid of that opacity change on redraw
+        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
     }
 
     public void showLoading() {
@@ -174,7 +178,8 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         @NonNull @Override
         public MovieDetailPresenter createPresenter() {
             return new MovieDetailPresenter(getResources().getString(R.string.API_KEY),
-                    getIntent().getIntExtra(Intent.EXTRA_TEXT, -1));
+                    getIntent().getIntExtra(Intent.EXTRA_TEXT, -1),
+                    getContentResolver());
         }
     };
 

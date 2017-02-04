@@ -1,20 +1,29 @@
 package software.level.udacity.popularmovies2.ui;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Log;
 
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function3;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import software.level.udacity.popularmovies2.api.MovieServiceManager;
+import software.level.udacity.popularmovies2.api.MovieServiceUtils;
 import software.level.udacity.popularmovies2.api.model.MovieDetails;
 import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
 import software.level.udacity.popularmovies2.api.model.MovieReviewEnvelope;
 import software.level.udacity.popularmovies2.api.model.MovieTrailerEnvelope;
+import software.level.udacity.popularmovies2.data.MovieContract;
 
 public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
 
@@ -24,7 +33,10 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
     private String apiKey;
 
     // Id of movie we are displaying data for
-    private int id;
+    final private int id;
+
+    // ContentResolver passed into the constructor for using the ContentProvider
+    private ContentResolver resolver;
 
     // If the presenter is currently trying to load data
     private boolean isLoading = false;
@@ -41,9 +53,10 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
      * @param apiKey required key to access the movie api
      * @param id id of movie we are displaying data for
      */
-    public MovieDetailPresenter(String apiKey, int id) {
+    public MovieDetailPresenter(String apiKey, int id, ContentResolver resolver) {
         this.apiKey = apiKey;
         this.id = id;
+        this.resolver = resolver;
     }
 
     @Override
@@ -78,6 +91,41 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
      * user once all three have completed.
      */
     private void loadMovieData() {
+        // Determine if the movie is stored in the favorites database
+        Cursor result = resolver.query(getMovieProviderUri(), null, null, null, null);
+
+        Observable<MovieDetails> details;
+        // If we have the movie stored in the database return the details from the database
+        if(result.getCount() > 0) {
+
+            result.moveToFirst();
+
+            final MovieDetails movieDetails = new MovieDetails();
+            movieDetails.favorite = true;
+            movieDetails.id = result.getInt(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID));
+            movieDetails.title = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_TITLE));
+            movieDetails.releaseDate = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE));
+            movieDetails.runtime = result.getInt(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RUNTIME));
+            movieDetails.voteAverage = result.getDouble(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RATING));
+            movieDetails.overview = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW));
+            movieDetails.encodedPoster = result.getBlob(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTER));
+            movieDetails.posterPath = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH));
+
+            details = Observable.create(new ObservableOnSubscribe<MovieDetails>() {
+                @Override
+                public void subscribe(ObservableEmitter<MovieDetails> e) throws Exception {
+                    e.onNext(movieDetails);
+                    e.onComplete();
+                }
+            });
+
+        // If the movie isn't a favorite go out and fetch the details from the movie service
+        } else {
+            details = MovieServiceManager.getService().getMovieDetails(id, apiKey);
+        }
+
+        result.close();
+
         // Dispose of any existing observables, gets rid of any pending requests
         compositeDisposable.clear();
 
@@ -86,7 +134,6 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
         compositeDisposable.add(observer);
 
         // Create the observables for all the types of data
-        Observable<MovieDetails> details = MovieServiceManager.getService().getMovieDetails(id, apiKey);
         Observable<MovieReviewEnvelope> reviews = MovieServiceManager.getService().getReviews(id, apiKey);
         Observable<MovieTrailerEnvelope> trailers = MovieServiceManager.getService().getTrailers(id, apiKey);
 
@@ -106,12 +153,41 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
 
     }
 
-    /**
-     * If the movie is a favorite already then remove it from the favorites. Otherwise add the movie
-     * to the list of favorites.
-     */
-    public void saveMovieData() {
-        Log.d(TAG, "saveMovieData: ");
+    public void setFavorite(Bitmap poster) {
+
+        data.details.favorite = true;
+
+        ContentValues values = new ContentValues();
+
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID, data.details.id);
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_TITLE, data.details.title);
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE, data.details.releaseDate);
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_RUNTIME, data.details.runtime);
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW, data.details.overview);
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_RATING, data.details.voteAverage);
+        values.put(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH, data.details.posterPath);
+
+        // If we were passed a poster bitmap to save encode it into a byte array and store it in the database
+        if(poster != null) {
+            byte[] encodedPoster = MovieServiceUtils.encodeImageData(poster);
+
+            data.details.encodedPoster = encodedPoster;
+            values.put(MovieContract.MovieFavoriteEntry.COLUMN_POSTER, encodedPoster);
+        }
+
+        resolver.insert(MovieContract.MovieFavoriteEntry.CONTENT_URI, values);
+    }
+
+    public void removeFavorite() {
+        data.details.favorite = false;
+        resolver.delete(getMovieProviderUri(), null, null);
+    }
+
+    private Uri getMovieProviderUri() {
+        return MovieContract.MovieFavoriteEntry.CONTENT_URI
+                .buildUpon()
+                .appendPath(String.valueOf(id))
+                .build();
     }
 
     /**
