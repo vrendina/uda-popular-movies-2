@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -276,14 +277,14 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         final TextView title;
         final TextView size;
-        final ImageView share;
+        final ImageButton share;
 
         MovieTrailerViewHolder(View view) {
             super(view);
 
             title = (TextView) view.findViewById(R.id.tv_trailer_title);
             size = (TextView) view.findViewById(R.id.tv_trailer_size);
-            share = (ImageView) view.findViewById(R.id.iv_share);
+            share = (ImageButton) view.findViewById(R.id.ib_share);
 
 
             view.setOnClickListener(new View.OnClickListener() {
