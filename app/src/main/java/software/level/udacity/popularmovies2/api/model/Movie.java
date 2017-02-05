@@ -47,6 +47,9 @@ public class Movie {
     @SerializedName("vote_average")
     public Double voteAverage;
 
+    // Holds the byte array that contains to the movie encodedPoster image
+    public byte[] encodedPoster;
+
     @Override
     public String toString() {
         return title;

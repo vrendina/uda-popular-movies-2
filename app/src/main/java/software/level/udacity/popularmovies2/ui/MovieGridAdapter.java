@@ -1,5 +1,6 @@
 package software.level.udacity.popularmovies2.ui;
 
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,16 +38,28 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
     }
 
 
+    private void loadPosterImage(ImageView poster, Movie movie) {
+        // If we have image data in the database decode it and display it
+        if(movie.encodedPoster != null) {
+            Bitmap bitmap = MovieServiceUtils.decodeImageData(movie.encodedPoster);
+            poster.setImageBitmap(bitmap);
+
+            // If there is no image data saved, load it from the web
+        } else {
+            String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath,
+                    poster.getContext().getString(R.string.poster_size)).toString();
+
+            Picasso.with(poster.getContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.poster_placeholder)
+                    .into(poster);
+        }
+    }
+
     @Override
     public void onBindViewHolder(MovieGridAdapterViewHolder holder, int position) {
         Movie movie = movies.get(position);
-        String imageUrl = MovieServiceUtils.buildImageURL(movie.posterPath,
-                holder.poster.getContext().getString(R.string.poster_size)).toString();
-
-        Picasso.with(holder.poster.getContext())
-                .load(imageUrl)
-                .placeholder(R.drawable.poster_placeholder)
-                .into(holder.poster);
+        loadPosterImage(holder.poster, movie);
     }
 
     @Override

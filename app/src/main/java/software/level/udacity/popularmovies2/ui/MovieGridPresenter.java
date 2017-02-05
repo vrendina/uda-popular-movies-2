@@ -1,10 +1,16 @@
 package software.level.udacity.popularmovies2.ui;
 
+import android.content.ContentResolver;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
@@ -12,6 +18,7 @@ import io.reactivex.schedulers.Schedulers;
 import software.level.udacity.popularmovies2.api.MovieServiceManager;
 import software.level.udacity.popularmovies2.api.model.Movie;
 import software.level.udacity.popularmovies2.api.model.MovieEnvelope;
+import software.level.udacity.popularmovies2.data.MovieContract;
 
 public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
@@ -22,11 +29,20 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     public static final int REQUEST_TOPRATED = 101;
     public static final int REQUEST_FAVORITE = 102;
 
+    // Default movie request type
+    private static final int REQUEST_DEFAULT = REQUEST_POPULAR;
+
     // Currently selected movie request type
-    private int selectedRequestType = REQUEST_POPULAR;
+    private int selectedRequestType = REQUEST_DEFAULT;
 
     // Key for the API set in the constructor
-    private String apiKey;
+    final private String apiKey;
+
+    // ContentResolver used to pull data from the ContentProvider
+    private ContentResolver resolver;
+
+    // ContentObserver to watch for changes in the favorite data
+    private FavoriteContentObserver observer;
 
     // If the presenter is currently trying to load data
     private boolean isLoading = false;
@@ -40,10 +56,16 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     /**
      * Constructor to create a new instance of the presenter.
      *
-     * @param apiKey Required key to access to movie api
+     * @param apiKey required key to access to movie api
+     * @param resolver ContentResolver object for retrieving information from the ContentProvider
      */
-    public MovieGridPresenter(String apiKey) {
+    public MovieGridPresenter(String apiKey, ContentResolver resolver) {
         this.apiKey = apiKey;
+        this.resolver = resolver;
+
+        // Create a content observer to be notified of changes to the favorites list
+        observer = new FavoriteContentObserver(new Handler());
+        resolver.registerContentObserver(MovieContract.MovieFavoriteEntry.CONTENT_URI, true, observer);
     }
 
     /**
@@ -74,6 +96,8 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     @Override
     public void dispose() {
         compositeDisposable.clear();
+        resolver.unregisterContentObserver(observer);
+
         super.dispose();
     }
 
@@ -136,6 +160,35 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
                 observable = MovieServiceManager.getService().getTopRatedMovies(apiKey);
                 break;
 
+            case REQUEST_FAVORITE:
+                observable = Observable.create(new ObservableOnSubscribe<MovieEnvelope>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<MovieEnvelope> e) throws Exception {
+                        MovieEnvelope envelope = new MovieEnvelope();
+                        envelope.movies = new ArrayList<>();
+
+                        Cursor results = resolver.query(MovieContract.MovieFavoriteEntry.CONTENT_URI, null, null, null, null);
+
+                        // Build up the list of movies from the favorites stored in the database
+                        if(results != null) {
+                            while(results.moveToNext()) {
+                                Movie movie = new Movie();
+                                movie.id = results.getInt(results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID));
+                                movie.posterPath = results.getString(results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH));
+                                movie.encodedPoster = results.getBlob(results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTER));
+
+                                envelope.movies.add(movie);
+                            }
+
+                            results.close();
+                        }
+
+                        e.onNext(envelope);
+                        e.onComplete();
+                    }
+                });
+                break;
+
             default:
                 observable = MovieServiceManager.getService().getPopularMovies(apiKey);
         }
@@ -177,6 +230,12 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         @Override
         public void onNext(MovieEnvelope movieEnvelope) {
             movieData = (ArrayList<Movie>) movieEnvelope.movies;
+
+            // If we select favorites but we don't have any show a message and switch back to default
+            if(selectedRequestType == REQUEST_FAVORITE && movieData.isEmpty()) {
+                view.showEmptyFavoritesWarning();
+                updateMovieData(REQUEST_DEFAULT);
+            }
         }
 
         @Override
@@ -194,6 +253,33 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         public void onComplete() {
             isLoading = false;
             showData();
+        }
+    }
+
+    /**
+     * If a change is made in the ContentProvider to the list of favorite movies this object will
+     * be notified. When returning from a MovieDetailActivity after making a change to the favorites
+     * the movie grid will not be updated to reflect the change unless the data is forced to reload.
+     */
+    private class FavoriteContentObserver extends ContentObserver {
+
+        public FavoriteContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        /**
+         * If the favorite list is displayed and a change occurs in the ContentProvider force the data
+         * to reload by clearing the movieData array.
+         *
+         * @param selfChange True if this is a self-change notification
+         */
+        @Override
+        public void onChange(boolean selfChange) {
+            super.onChange(selfChange);
+
+            if(selectedRequestType == REQUEST_FAVORITE) {
+                movieData = new ArrayList<>();
+            }
         }
     }
 
