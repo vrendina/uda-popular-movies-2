@@ -23,4 +23,7 @@
 
     <string name="favorite_add">Add Favorite</string>
     <string name="favorite_remove">Remove Favorite</string>
+
+    <string name="error_loading_movies">Error loading movie data!</string>
+    <string name="warning_empty_favorites">No favorite movies found!</string>
 </resources>
