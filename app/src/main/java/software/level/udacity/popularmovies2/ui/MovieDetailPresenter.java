@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -14,6 +15,7 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
 import io.reactivex.functions.Function3;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
@@ -48,10 +50,11 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
     private MovieDetailsComposite data;
 
     /**
-     * Creates a new instance of the presenter.
+     * Creates a new instance of the MovieDetailPresenter
      *
      * @param apiKey required key to access the movie api
-     * @param id id of movie we are displaying data for
+     * @param id unique id for the movie we are getting details for
+     * @param resolver ContentResolver object for retrieving information from the ContentProvider
      */
     public MovieDetailPresenter(String apiKey, int id, ContentResolver resolver) {
         this.apiKey = apiKey;
@@ -91,41 +94,6 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
      * user once all three have completed.
      */
     private void loadMovieData() {
-        // Determine if the movie is stored in the favorites database
-        Cursor result = resolver.query(getMovieProviderUri(), null, null, null, null);
-
-        Observable<MovieDetails> details;
-        // If we have the movie stored in the database return the details from the database
-        if(result.getCount() > 0) {
-
-            result.moveToFirst();
-
-            final MovieDetails movieDetails = new MovieDetails();
-            movieDetails.favorite = true;
-            movieDetails.id = result.getInt(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID));
-            movieDetails.title = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_TITLE));
-            movieDetails.releaseDate = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE));
-            movieDetails.runtime = result.getInt(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RUNTIME));
-            movieDetails.voteAverage = result.getDouble(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RATING));
-            movieDetails.overview = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW));
-            movieDetails.encodedPoster = result.getBlob(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTER));
-            movieDetails.posterPath = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH));
-
-            details = Observable.create(new ObservableOnSubscribe<MovieDetails>() {
-                @Override
-                public void subscribe(ObservableEmitter<MovieDetails> e) throws Exception {
-                    e.onNext(movieDetails);
-                    e.onComplete();
-                }
-            });
-
-        // If the movie isn't a favorite go out and fetch the details from the movie service
-        } else {
-            details = MovieServiceManager.getService().getMovieDetails(id, apiKey);
-        }
-
-        result.close();
-
         // Dispose of any existing observables, gets rid of any pending requests
         compositeDisposable.clear();
 
@@ -133,9 +101,11 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
         DisposableObserver<MovieDetailsComposite> observer = new MovieDetailPresenter.MovieObserver();
         compositeDisposable.add(observer);
 
-        // Create the observables for all the types of data
-        Observable<MovieReviewEnvelope> reviews = MovieServiceManager.getService().getReviews(id, apiKey);
-        Observable<MovieTrailerEnvelope> trailers = MovieServiceManager.getService().getTrailers(id, apiKey);
+        // Get the observables for all the movie data
+        Observable<MovieDetails> details = getDetails();
+        Observable<MovieReviewEnvelope> reviews = getReviews();
+        Observable<MovieTrailerEnvelope> trailers = getTrailers();
+
 
         // Combine all the observables with the zip operator
         Observable<MovieDetailsComposite> combined = Observable.zip(details, reviews, trailers,
@@ -151,6 +121,109 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
                 .subscribeOn(Schedulers.io())
                 .subscribe(observer);
 
+    }
+
+    /**
+     * Attempts to load the movie details from the ContentProvider and if an error is encountered
+     * (i.e. it isn't stored as a favorite) it will go out to the web to download the movie details.
+     * If the movie details can't be obtained an error message is shown in the view.
+     *
+     * @return Observable<MovieDetails>
+     */
+    private Observable<MovieDetails> getDetails() {
+        return Observable.create(new ObservableOnSubscribe<MovieDetails>() {
+            @Override
+            public void subscribe(ObservableEmitter<MovieDetails> e) throws Exception {
+
+                // Query the ContentProvider
+                Cursor result = resolver.query(getMovieProviderUri(), null, null, null, null);
+
+                if(result != null) {
+                    // If we have the movie stored in the favorites database emit the data
+                    if(result.moveToFirst()) {
+
+                        MovieDetails movieDetails = new MovieDetails();
+                        movieDetails.favorite = true;
+                        movieDetails.id = result.getInt(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID));
+                        movieDetails.title = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_TITLE));
+                        movieDetails.releaseDate = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE));
+                        movieDetails.runtime = result.getInt(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RUNTIME));
+                        movieDetails.voteAverage = result.getDouble(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RATING));
+                        movieDetails.overview = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW));
+                        movieDetails.encodedPoster = result.getBlob(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTER));
+                        movieDetails.posterPath = result.getString(result.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH));
+
+                        // Close the cursor
+                        result.close();
+
+                        // Emit the data and mark the observable as complete
+                        e.onNext(movieDetails);
+                        e.onComplete();
+
+                    // If the movie is not stored emit an error and attempt to fetch from the web
+                    } else {
+                        // Close the cursor
+                        result.close();
+
+                        String msg = "Movie is not stored in the favorites database";
+
+                        Log.d(TAG, "getDetails: " + msg);
+                        e.onError(new Throwable(msg));
+                    }
+                } else {
+                    String errorMsg = "Cursor result was null, this shouldn't happen!";
+
+                    Log.e(TAG, "getDetails: " + errorMsg);
+                    e.onError(new Throwable(errorMsg));
+                }
+            }
+        }).onErrorResumeNext(MovieServiceManager.getService().getMovieDetails(id, apiKey));
+    }
+
+    /**
+     * Creates an observable to fetch the movie reviews and if an error occurs returns an empty
+     * list of reviews.
+     *
+     * @return Observable<MovieReviewEnvelope>
+     */
+    private Observable<MovieReviewEnvelope> getReviews() {
+        return MovieServiceManager.getService().getReviews(id, apiKey)
+            .onErrorReturn(new Function<Throwable, MovieReviewEnvelope>() {
+                @Override
+                public MovieReviewEnvelope apply(Throwable throwable) throws Exception {
+                    Log.e(TAG, "Error fetching reviews: " + throwable.getMessage());
+
+                    // Create an empty envelope with no reviews
+                    MovieReviewEnvelope envelope = new MovieReviewEnvelope();
+                    envelope.totalResults = 0;
+                    envelope.totalPages = 0;
+                    envelope.reviews = new ArrayList<>();
+
+                    return envelope;
+                }
+            });
+    }
+
+    /**
+     * Creates an observable to fetch the movie trailers and if an error occurs returns an empty
+     * list of trailers.
+     *
+     * @return Observable<MovieTrailerEnvelope>
+     */
+    private Observable<MovieTrailerEnvelope> getTrailers() {
+        return MovieServiceManager.getService().getTrailers(id, apiKey)
+            .onErrorReturn(new Function<Throwable, MovieTrailerEnvelope>() {
+                @Override
+                public MovieTrailerEnvelope apply(Throwable throwable) throws Exception {
+                    Log.e(TAG, "Error fetching trailers: " + throwable.getMessage());
+
+                    // Create an empty envelope with no trailers
+                    MovieTrailerEnvelope envelope = new MovieTrailerEnvelope();
+                    envelope.trailers = new ArrayList<>();
+
+                    return envelope;
+                }
+            });
     }
 
     public void setFavorite(Bitmap poster) {
