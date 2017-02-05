@@ -167,7 +167,7 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     }
 
     public void showError() {
-        Toast.makeText(this, "Error loading movie data!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.error_loading_movies), Toast.LENGTH_LONG).show();
         hideLoading();
     }
 
