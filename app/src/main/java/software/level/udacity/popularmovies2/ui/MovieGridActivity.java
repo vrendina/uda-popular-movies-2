@@ -181,8 +181,12 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         adapter.setMovieData(movieData);
     }
 
+    public void showEmptyFavoritesWarning() {
+        Toast.makeText(this, getString(R.string.warning_empty_favorites), Toast.LENGTH_LONG).show();
+    }
+
     public void showError() {
-        Toast.makeText(this, "Error loading movie data!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.error_loading_movies), Toast.LENGTH_LONG).show();
         hideLoading();
     }
 
@@ -193,7 +197,7 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
             new PresenterFactory<MovieGridPresenter>() {
                 @NonNull @Override
                 public MovieGridPresenter createPresenter() {
-                    return new MovieGridPresenter(getResources().getString(R.string.API_KEY));
+                    return new MovieGridPresenter(getResources().getString(R.string.API_KEY), getContentResolver());
                 }
             };
 
