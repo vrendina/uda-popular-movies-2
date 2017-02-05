@@ -44,13 +44,6 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         presenter = PresenterManager.getPresenter(TAG, presenterFactory);
 
         configureRecyclerView();
-
-
-//        ContentValues values = new ContentValues();
-//
-//        values.put(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID, 1234);
-//        getContentResolver().insert(MovieContract.MovieFavoriteEntry.CONTENT_URI, values);
-
     }
 
     /**
