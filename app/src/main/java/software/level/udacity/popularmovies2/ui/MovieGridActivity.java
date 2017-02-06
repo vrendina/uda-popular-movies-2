@@ -54,6 +54,9 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
     protected void onStart() {
         super.onStart();
 
+        // By default we want to destroy the presenter when it goes off screen unless the state is saved
+        activityIsFinished = true;
+
         presenter.bindView(this);
     }
 
