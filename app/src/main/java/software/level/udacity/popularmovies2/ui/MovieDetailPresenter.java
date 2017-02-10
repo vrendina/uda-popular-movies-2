@@ -10,11 +10,16 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Function3;
 import io.reactivex.observers.DisposableObserver;
@@ -226,34 +231,102 @@ public class MovieDetailPresenter extends Presenter<MovieDetailActivity> {
             });
     }
 
-    public void setFavorite(Bitmap poster) {
+    /**
+     * Saves a movie to the favorites database using a Completable to offload the task to a background
+     * thread.
+     *
+     * @param poster Bitmap image of the poster to be saved
+     */
+    public void setFavorite(final Bitmap poster) {
 
         data.details.favorite = true;
 
-        ContentValues values = new ContentValues();
+        Completable.create(new CompletableOnSubscribe() {
+            @Override
+            public void subscribe(CompletableEmitter e) throws Exception {
 
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID, data.details.id);
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_TITLE, data.details.title);
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE, data.details.releaseDate);
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_RUNTIME, data.details.runtime);
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW, data.details.overview);
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_RATING, data.details.voteAverage);
-        values.put(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH, data.details.posterPath);
+                ContentValues values = new ContentValues();
 
-        // If we were passed a poster bitmap to save encode it into a byte array and store it in the database
-        if(poster != null) {
-            byte[] encodedPoster = MovieServiceUtils.encodeImageData(poster);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID, data.details.id);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_TITLE, data.details.title);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE, data.details.releaseDate);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_RUNTIME, data.details.runtime);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW, data.details.overview);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_RATING, data.details.voteAverage);
+                values.put(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH, data.details.posterPath);
 
-            data.details.encodedPoster = encodedPoster;
-            values.put(MovieContract.MovieFavoriteEntry.COLUMN_POSTER, encodedPoster);
-        }
+                // If we were passed a poster bitmap to save encode it into a byte array and store it in the database
+                if(poster != null) {
+                    byte[] encodedPoster = MovieServiceUtils.encodeImageData(poster);
 
-        resolver.insert(MovieContract.MovieFavoriteEntry.CONTENT_URI, values);
+                    data.details.encodedPoster = encodedPoster;
+                    values.put(MovieContract.MovieFavoriteEntry.COLUMN_POSTER, encodedPoster);
+                }
+
+                Uri result = resolver.insert(MovieContract.MovieFavoriteEntry.CONTENT_URI, values);
+
+                if(result == null) {
+                    e.onError(new Throwable("Problem saving favorite to database."));
+                }
+
+                e.onComplete();
+            }
+        }).observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.io())
+            .subscribe(new CompletableObserver() {
+                @Override
+                public void onSubscribe(Disposable d) {
+                }
+
+                @Override
+                public void onComplete() {
+                    Log.d(TAG, "onComplete: Saved movie to favorites database.");
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.e(TAG, "onError: " + e.getMessage());
+                }
+            });
     }
 
+    /**
+     * Remove movie from favorites stored in the database. Use a Completable to move the task
+     * of the main thread.
+     */
     public void removeFavorite() {
+
         data.details.favorite = false;
-        resolver.delete(getMovieProviderUri(), null, null);
+
+        Completable.create(new CompletableOnSubscribe() {
+            @Override
+            public void subscribe(CompletableEmitter e) throws Exception {
+
+                int rows = resolver.delete(getMovieProviderUri(), null, null);
+
+                if(rows != 1) {
+                    e.onError(new Throwable("Problem removing movie from database."));
+                }
+
+                e.onComplete();
+            }
+        }).observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new CompletableObserver() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d(TAG, "onComplete: Removed movie from favorite database.");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
+                    }
+                });
     }
 
     private Uri getMovieProviderUri() {
