@@ -1,17 +1,46 @@
 package software.level.udacity.popularmovies2.api.model;
 
-/**
- * Composite of all movie details. Object holds the movie details, reviews,
- * and trailers.
- */
-public class MovieDetailsComposite {
-    public MovieDetails details;
-    public MovieReviewEnvelope reviewEnvelope;
-    public MovieTrailerEnvelope trailerEnvelope;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-    public MovieDetailsComposite(MovieDetails details, MovieReviewEnvelope reviewEnvelope, MovieTrailerEnvelope trailerEnvelope) {
-        this.details = details;
-        this.reviewEnvelope = reviewEnvelope;
-        this.trailerEnvelope = trailerEnvelope;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MovieDetailsComposite implements Parcelable {
+
+    public ArrayList<MovieTrailer> trailers;
+    public ArrayList<MovieReview> reviews;
+
+    public MovieDetailsComposite(List<MovieTrailer> trailers, List<MovieReview> reviews) {
+        this.trailers = (ArrayList<MovieTrailer>) trailers;
+        this.reviews = (ArrayList<MovieReview>) reviews;
     }
+
+    protected MovieDetailsComposite(Parcel in) {
+        trailers = in.createTypedArrayList(MovieTrailer.CREATOR);
+        reviews = in.createTypedArrayList(MovieReview.CREATOR);
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(trailers);
+        dest.writeTypedList(reviews);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<MovieDetailsComposite> CREATOR = new Creator<MovieDetailsComposite>() {
+        @Override
+        public MovieDetailsComposite createFromParcel(Parcel in) {
+            return new MovieDetailsComposite(in);
+        }
+
+        @Override
+        public MovieDetailsComposite[] newArray(int size) {
+            return new MovieDetailsComposite[size];
+        }
+    };
 }
