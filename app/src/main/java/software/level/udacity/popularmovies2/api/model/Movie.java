@@ -6,6 +6,10 @@ import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 public class Movie implements Parcelable {
+
+    @SerializedName("id")
+    public Integer id;
+
     @SerializedName("poster_path")
     public String posterPath;
 
@@ -15,33 +19,31 @@ public class Movie implements Parcelable {
     @SerializedName("release_date")
     public String releaseDate;
 
-    @SerializedName("id")
-    public Integer id;
-
-    @SerializedName("original_title")
-    public String originalTitle;
-
-    @SerializedName("original_language")
-    public String originalLanguage;
-
     @SerializedName("title")
     public String title;
 
-    // Holds the byte array that contains to the movie encodedPoster image
-    public byte[] encodedPoster;
+    @SerializedName("vote_average")
+    public Double voteAverage;
+
+    // If the movie is added to the list of favorites this will be true
+    public boolean favorite = false;
+
+    // Holds the byte array that contains to the movie poster image
+    public byte[] poster;
 
     public Movie() {
         // Empty public constructor for normal Movie creation
     }
 
     protected Movie(Parcel in) {
+        id = in.readInt();
         posterPath = in.readString();
         overview = in.readString();
         releaseDate = in.readString();
-        originalTitle = in.readString();
-        originalLanguage = in.readString();
         title = in.readString();
-        encodedPoster = in.createByteArray();
+        voteAverage = in.readDouble();
+        favorite = in.readByte() != 0;
+        poster = in.createByteArray();
     }
 
     public static final Creator<Movie> CREATOR = new Creator<Movie>() {
@@ -68,12 +70,13 @@ public class Movie implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
         dest.writeString(posterPath);
         dest.writeString(overview);
         dest.writeString(releaseDate);
-        dest.writeString(originalTitle);
-        dest.writeString(originalLanguage);
         dest.writeString(title);
-        dest.writeByteArray(encodedPoster);
+        dest.writeDouble(voteAverage);
+        dest.writeByte((byte) (favorite ? 1 : 0));
+        dest.writeByteArray(poster);
     }
 }
