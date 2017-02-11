@@ -3,6 +3,7 @@ package software.level.udacity.popularmovies2.ui;
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
@@ -53,6 +54,10 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     // Movie data that is pushed to the RecyclerView
     private ArrayList<Movie> movieData = new ArrayList<>();
 
+    // Keys for storing state data in the bundle
+    private static final String KEY_REQUEST_TYPE = "requestType";
+    private static final String KEY_MOVIE_DATA = "movieData";
+
     /**
      * Constructor to create a new instance of the presenter.
      *
@@ -91,6 +96,48 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
         // We already have movie data and we aren't trying to load any, show the data immediately
         showData();
+    }
+
+    /**
+     * Generates a bundle with state information for recreating the presenter.
+     *
+     * @return Bundle containing state information
+     */
+    public Bundle saveState() {
+        Bundle state = new Bundle();
+
+        // Save selected request type
+        state.putInt(KEY_REQUEST_TYPE, selectedRequestType);
+
+        // Save the list of movie data
+        state.putParcelableArrayList(KEY_MOVIE_DATA, movieData);
+
+        Log.d(TAG, "saveState: " + state.toString());
+
+        return state;
+    }
+
+    /**
+     * Restore the state of the presenter with the information stored in the passed Bundle.
+     *
+     * @param state Bundle that contains saved presenter state information
+     */
+    public void restoreState(Bundle state) {
+
+        Log.d(TAG, "restoreState: " + state.toString());
+
+        // Restore the selected request type
+        this.selectedRequestType = state.getInt(KEY_REQUEST_TYPE, REQUEST_DEFAULT);
+
+        // Restore any saved movie data if we don't have any and we aren't loading
+        if(this.movieData.isEmpty() && !isLoading) {
+            this.movieData = state.getParcelableArrayList(KEY_MOVIE_DATA);
+
+            // If the movie data stored in the bundle was null set it to an empty array
+            if(this.movieData == null) {
+                this.movieData = new ArrayList<>();
+            }
+        }
     }
 
     @Override
@@ -231,10 +278,9 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         public void onNext(MovieEnvelope movieEnvelope) {
             movieData = (ArrayList<Movie>) movieEnvelope.movies;
 
-            // If we select favorites but we don't have any show a message and switch back to default
+            // If we select favorites but we don't have any show a message
             if(selectedRequestType == REQUEST_FAVORITE && movieData.isEmpty()) {
                 view.showEmptyFavoritesWarning();
-                updateMovieData(REQUEST_DEFAULT);
             }
         }
 
