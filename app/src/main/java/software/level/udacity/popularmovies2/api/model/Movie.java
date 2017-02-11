@@ -7,6 +7,8 @@ import com.google.gson.annotations.SerializedName;
 
 public class Movie implements Parcelable {
 
+    public static final String TAG = Movie.class.getSimpleName();
+
     @SerializedName("id")
     public Integer id;
 
@@ -25,15 +27,11 @@ public class Movie implements Parcelable {
     @SerializedName("vote_average")
     public Double voteAverage;
 
-    // If the movie is added to the list of favorites this will be true
-    public boolean favorite = false;
+    public boolean favorite;
 
-    // Holds the byte array that contains to the movie poster image
     public byte[] poster;
 
-    public Movie() {
-        // Empty public constructor for normal Movie creation
-    }
+    public Movie() {}
 
     protected Movie(Parcel in) {
         id = in.readInt();
@@ -60,7 +58,10 @@ public class Movie implements Parcelable {
 
     @Override
     public String toString() {
-        return title;
+        return  "Title: "           + title +
+                ", Release date: "  + releaseDate +
+                ", Vote average: "  + voteAverage +
+                ", Favorite: "      + favorite;
     }
 
     @Override
