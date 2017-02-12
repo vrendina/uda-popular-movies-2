@@ -8,12 +8,15 @@ import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import software.level.udacity.popularmovies2.api.MovieServiceManager;
@@ -25,38 +28,25 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
     public static final String TAG = MovieGridPresenter.class.getSimpleName();
 
-    // Identifiers for the types of movie requests we can perform
-    public static final int REQUEST_POPULAR = 100;
-    public static final int REQUEST_TOPRATED = 101;
-    public static final int REQUEST_FAVORITE = 102;
-
-    // Default movie request type
-    private static final int REQUEST_DEFAULT = REQUEST_POPULAR;
-
-    // Currently selected movie request type
-    private int selectedRequestType = REQUEST_DEFAULT;
-
-    // Key for the API set in the constructor
     final private String apiKey;
-
-    // ContentResolver used to pull data from the ContentProvider
     private ContentResolver resolver;
 
-    // ContentObserver to watch for changes in the favorite data
     private FavoriteContentObserver observer;
 
-    // If the presenter is currently trying to load data
     private boolean isLoading = false;
 
-    // CompositeDisposable used to dispose of any observables when destroying the presenter
+    private int selectedRequestType = MovieEnvelope.TYPE_POPULAR;
+
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
-    // Movie data that is pushed to the RecyclerView
-    private ArrayList<Movie> movieData = new ArrayList<>();
+    private ArrayList<Movie> favorites = new ArrayList<>();
+    private ArrayList<Movie> popular = new ArrayList<>();
+    private ArrayList<Movie> toprated = new ArrayList<>();
 
-    // Keys for storing state data in the bundle
     private static final String KEY_REQUEST_TYPE = "requestType";
-    private static final String KEY_MOVIE_DATA = "movieData";
+    private static final String KEY_MOVIES_FAVORITES = "favorites";
+    private static final String KEY_MOVIES_POPULAR = "popular";
+    private static final String KEY_MOVIES_TOPRATED = "toprated";
 
     /**
      * Constructor to create a new instance of the presenter.
@@ -88,14 +78,7 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
             return;
         }
 
-        // If we don't have any movie data and aren't trying to load any force the loading
-        if(movieData.isEmpty()) {
-            loadMovieData();
-            return;
-        }
-
-        // We already have movie data and we aren't trying to load any, show the data immediately
-        showData();
+        loadMovieData();
     }
 
     /**
@@ -109,8 +92,10 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         // Save selected request type
         state.putInt(KEY_REQUEST_TYPE, selectedRequestType);
 
-        // Save the list of movie data
-        state.putParcelableArrayList(KEY_MOVIE_DATA, movieData);
+        // Save the lists of movie data
+        state.putParcelableArrayList(KEY_MOVIES_POPULAR, popular);
+        state.putParcelableArrayList(KEY_MOVIES_FAVORITES, favorites);
+        state.putParcelableArrayList(KEY_MOVIES_TOPRATED, toprated);
 
         Log.d(TAG, "saveState: " + state.toString());
 
@@ -126,18 +111,11 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
         Log.d(TAG, "restoreState: " + state.toString());
 
-        // Restore the selected request type
-        this.selectedRequestType = state.getInt(KEY_REQUEST_TYPE, REQUEST_DEFAULT);
+        this.selectedRequestType = state.getInt(KEY_REQUEST_TYPE, MovieEnvelope.TYPE_POPULAR);
 
-        // Restore any saved movie data if we don't have any and we aren't loading
-        if(this.movieData.isEmpty() && !isLoading) {
-            this.movieData = state.getParcelableArrayList(KEY_MOVIE_DATA);
-
-            // If the movie data stored in the bundle was null set it to an empty array
-            if(this.movieData == null) {
-                this.movieData = new ArrayList<>();
-            }
-        }
+        this.toprated = state.getParcelableArrayList(KEY_MOVIES_TOPRATED);
+        this.favorites = state.getParcelableArrayList(KEY_MOVIES_FAVORITES);
+        this.popular = state.getParcelableArrayList(KEY_MOVIES_POPULAR);
     }
 
     @Override
@@ -151,18 +129,12 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     /**
      * Updates the movie data based on what the user has requested.
      *
-     * @param requestType Type of movie request (REQUEST_POPULAR, REQUEST_TOPRATED, REQUEST_FAVORITE)
+     * @param requestType Type of movie request
      */
     public void updateMovieData(int requestType) {
 
         // If the data is loading and we request the same type of data again do nothing
         if(isLoading && requestType == selectedRequestType) {
-            return;
-        }
-
-        // If the data is done loading and we request the same type of data again display the data immediately
-        if(!isLoading && requestType == selectedRequestType && !movieData.isEmpty()) {
-            showData();
             return;
         }
 
@@ -178,9 +150,6 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
      * API or from the local database for stored favorites.
      */
     private void loadMovieData() {
-        // Clear out the current list of data
-        movieData = new ArrayList<>();
-
         // Dispose of any existing observables, gets rid of any pending requests
         compositeDisposable.clear();
 
@@ -188,13 +157,14 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         DisposableObserver<MovieEnvelope> observer = new MovieObserver();
         compositeDisposable.add(observer);
 
-        getDataObservable().observeOn(AndroidSchedulers.mainThread())
+        getDataObservable().delay(0, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(observer);
     }
 
     /**
-     * Gets an observable that will emit movie data.
+     * Gets an observable that will emit movie data based on the selected request type.
      *
      * @return Observable that emits a single MovieEnvelope object before termination
      */
@@ -202,48 +172,100 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         Observable<MovieEnvelope> observable;
 
         switch(selectedRequestType) {
-            case REQUEST_POPULAR:
-                observable = MovieServiceManager.getService().getPopularMovies(apiKey);
+            case MovieEnvelope.TYPE_POPULAR:
+                observable = getPopularMovies();
                 break;
 
-            case REQUEST_TOPRATED:
-                observable = MovieServiceManager.getService().getTopRatedMovies(apiKey);
+            case MovieEnvelope.TYPE_TOPRATED:
+                observable = getTopRatedMovies();
                 break;
 
-            case REQUEST_FAVORITE:
-                observable = Observable.create(new ObservableOnSubscribe<MovieEnvelope>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<MovieEnvelope> e) throws Exception {
-                        MovieEnvelope envelope = new MovieEnvelope();
-                        envelope.movies = new ArrayList<>();
-
-                        Cursor results = resolver.query(MovieContract.MovieFavoriteEntry.CONTENT_URI, null, null, null, null);
-
-                        // Build up the list of movies from the favorites stored in the database
-                        if(results != null) {
-                            while(results.moveToNext()) {
-                                Movie movie = new Movie();
-                                movie.id = results.getInt(results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID));
-                                movie.posterPath = results.getString(results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH));
-                                movie.encodedPoster = results.getBlob(results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTER));
-
-                                envelope.movies.add(movie);
-                            }
-
-                            results.close();
-                        }
-
-                        e.onNext(envelope);
-                        e.onComplete();
-                    }
-                });
+            case MovieEnvelope.TYPE_FAVORITE:
+                observable = getFavoriteMovies();
                 break;
 
             default:
-                observable = MovieServiceManager.getService().getPopularMovies(apiKey);
+                observable = getPopularMovies();
         }
 
         return observable;
+    }
+
+    private Observable<MovieEnvelope> getPopularMovies() {
+        if(!popular.isEmpty()) {
+            return Observable.just(new MovieEnvelope(popular, MovieEnvelope.TYPE_POPULAR));
+        } else {
+            return MovieServiceManager.getService()
+                    .getPopularMovies(apiKey)
+                    .map(new Function<MovieEnvelope, MovieEnvelope>() {
+                        @Override
+                        public MovieEnvelope apply(MovieEnvelope movieEnvelope) throws Exception {
+                            movieEnvelope.resultType = MovieEnvelope.TYPE_POPULAR;
+                            return movieEnvelope;
+                        }
+                    });
+        }
+    }
+
+    private Observable<MovieEnvelope> getTopRatedMovies() {
+        if(!toprated.isEmpty()) {
+            return Observable.just(new MovieEnvelope(toprated, MovieEnvelope.TYPE_TOPRATED));
+        } else {
+            return MovieServiceManager.getService()
+                    .getTopRatedMovies(apiKey)
+                    .map(new Function<MovieEnvelope, MovieEnvelope>() {
+                        @Override
+                        public MovieEnvelope apply(MovieEnvelope movieEnvelope) throws Exception {
+                            movieEnvelope.resultType = MovieEnvelope.TYPE_TOPRATED;
+                            return movieEnvelope;
+                        }
+                    });
+        }
+    }
+
+    private Observable<MovieEnvelope> getFavoriteMovies() {
+        if(!favorites.isEmpty()) {
+            return Observable.just(new MovieEnvelope(favorites, MovieEnvelope.TYPE_FAVORITE));
+        } else {
+            return Observable.create(new ObservableOnSubscribe<MovieEnvelope>() {
+                @Override
+                public void subscribe(ObservableEmitter<MovieEnvelope> e) throws Exception {
+                    List<Movie> movies = new ArrayList<>();
+
+                    Cursor results = resolver.query(MovieContract.MovieFavoriteEntry.CONTENT_URI, null, null, null, null);
+
+                    // Build up the list of movies from the favorites stored in the database
+                    if (results != null) {
+                        while (results.moveToNext()) {
+                            Movie movie = new Movie();
+
+                            int idIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_MOVIEID);
+                            int posterPathIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTERPATH);
+                            int overviewIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_OVERVIEW);
+                            int releaseDateIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RELEASEDATE);
+                            int titleIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_TITLE);
+                            int voteAverageIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_RATING);
+                            int posterIndex = results.getColumnIndex(MovieContract.MovieFavoriteEntry.COLUMN_POSTER);
+
+                            movie.id = results.getInt(idIndex);
+                            movie.posterPath = results.getString(posterPathIndex);
+                            movie.overview = results.getString(overviewIndex);
+                            movie.releaseDate = results.getString(releaseDateIndex);
+                            movie.title = results.getString(titleIndex);
+                            movie.voteAverage = results.getDouble(voteAverageIndex);
+                            movie.poster = results.getBlob(posterIndex);
+
+                            movies.add(movie);
+                        }
+
+                        results.close();
+                    }
+
+                    e.onNext(new MovieEnvelope(movies, MovieEnvelope.TYPE_FAVORITE));
+                    e.onComplete();
+                }
+            });
+        }
     }
 
     /**
@@ -258,9 +280,9 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     /**
      * Tells the view to display the movie data and stop showing any loading indicators.
      */
-    private void showData() {
+    private void showData(ArrayList<Movie> movies) {
         if(view != null) {
-            view.updateData(movieData);
+            view.updateData(movies);
             view.hideLoading();
         }
     }
@@ -278,13 +300,32 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         }
 
         @Override
-        public void onNext(MovieEnvelope movieEnvelope) {
-            movieData = (ArrayList<Movie>) movieEnvelope.movies;
+        public void onNext(MovieEnvelope envelope) {
+            isLoading = false;
 
-            // If we select favorites but we don't have any show a message
-            if(selectedRequestType == REQUEST_FAVORITE && movieData.isEmpty()) {
-                view.showEmptyFavoritesWarning();
+            ArrayList<Movie> movies = (ArrayList<Movie>) envelope.movies;
+
+            switch (envelope.resultType) {
+                case MovieEnvelope.TYPE_POPULAR:
+                    popular = movies;
+                    break;
+
+                case MovieEnvelope.TYPE_TOPRATED:
+                    toprated = movies;
+                    break;
+
+                case MovieEnvelope.TYPE_FAVORITE:
+                    favorites = movies;
+
+                    if(favorites.isEmpty()) {
+                        view.showEmptyFavoritesWarning();
+                    }
+
+                    break;
             }
+            Log.d(TAG, "onNext: Obtained list of movies from observable " + movies.toString());
+
+            showData(movies);
         }
 
         @Override
@@ -292,7 +333,7 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
             Log.e(TAG, "onError: MovieObserver error", e);
 
             isLoading = false;
-            showData();
+            showData(new ArrayList<Movie>());
 
             if(view != null) {
                 view.showError();
@@ -300,10 +341,7 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         }
 
         @Override
-        public void onComplete() {
-            isLoading = false;
-            showData();
-        }
+        public void onComplete() {}
     }
 
     /**
@@ -319,7 +357,7 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
         /**
          * If the favorite list is displayed and a change occurs in the ContentProvider force the data
-         * to reload by clearing the movieData array.
+         * to reload by clearing the movies array.
          *
          * @param selfChange True if this is a self-change notification
          */
@@ -327,8 +365,8 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
-            if(selectedRequestType == REQUEST_FAVORITE) {
-                movieData = new ArrayList<>();
+            if(selectedRequestType == MovieEnvelope.TYPE_FAVORITE) {
+                favorites = new ArrayList<>();
             }
         }
     }

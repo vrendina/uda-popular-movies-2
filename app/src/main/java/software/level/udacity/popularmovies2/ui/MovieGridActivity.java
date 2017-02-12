@@ -18,6 +18,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.model.Movie;
+import software.level.udacity.popularmovies2.api.model.MovieEnvelope;
 
 public class MovieGridActivity extends AppCompatActivity implements MovieGridAdapter.MovieClickHandler {
 
@@ -111,6 +112,9 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         Intent intent = new Intent(this, MovieDetailActivity.class);
         intent.putExtra(Intent.EXTRA_TEXT, movie.id);
 
+        // Pass the entire parcelable movie object
+        intent.putExtra(Movie.TAG, movie);
+
         startActivity(intent);
     }
 
@@ -138,15 +142,15 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         int id = item.getItemId();
         switch(id) {
             case R.id.action_favorite:
-                presenter.updateMovieData(MovieGridPresenter.REQUEST_FAVORITE);
+                presenter.updateMovieData(MovieEnvelope.TYPE_FAVORITE);
                 return true;
 
             case R.id.action_popular:
-                presenter.updateMovieData(MovieGridPresenter.REQUEST_POPULAR);
+                presenter.updateMovieData(MovieEnvelope.TYPE_POPULAR);
                 return true;
 
             case R.id.action_toprated:
-                presenter.updateMovieData(MovieGridPresenter.REQUEST_TOPRATED);
+                presenter.updateMovieData(MovieEnvelope.TYPE_TOPRATED);
                 return true;
         }
 
