@@ -1,17 +1,19 @@
 package software.level.udacity.popularmovies2.api.model;
 
-/**
- * Composite of all movie details. Object holds the movie details, reviews,
- * and trailers.
- */
-public class MovieDetailsComposite {
-    public MovieDetails details;
-    public MovieReviewEnvelope reviewEnvelope;
-    public MovieTrailerEnvelope trailerEnvelope;
+import java.util.ArrayList;
+import java.util.List;
 
-    public MovieDetailsComposite(MovieDetails details, MovieReviewEnvelope reviewEnvelope, MovieTrailerEnvelope trailerEnvelope) {
-        this.details = details;
-        this.reviewEnvelope = reviewEnvelope;
-        this.trailerEnvelope = trailerEnvelope;
+public class MovieDetailsComposite {
+
+    public ArrayList<MovieTrailer> trailers;
+    public ArrayList<MovieReview> reviews;
+
+    public boolean favorite;
+
+    public MovieDetailsComposite(List<MovieTrailer> trailers, List<MovieReview> reviews, boolean favorite) {
+        this.trailers = (ArrayList<MovieTrailer>) trailers;
+        this.reviews = (ArrayList<MovieReview>) reviews;
+        this.favorite = favorite;
     }
+
 }

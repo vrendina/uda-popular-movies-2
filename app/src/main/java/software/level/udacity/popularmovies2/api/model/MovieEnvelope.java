@@ -5,6 +5,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class MovieEnvelope {
+
+    public static final int TYPE_POPULAR = 100;
+    public static final int TYPE_TOPRATED = 101;
+    public static final int TYPE_FAVORITE = 102;
+
     @SerializedName("page")
     public Integer page;
 
@@ -16,4 +21,11 @@ public class MovieEnvelope {
 
     @SerializedName("total_pages")
     public Integer totalPages;
+
+    public int resultType;
+
+    public MovieEnvelope(List<Movie> movies, int resultType) {
+        this.movies = movies;
+        this.resultType = resultType;
+    }
 }

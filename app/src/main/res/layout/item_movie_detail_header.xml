@@ -12,20 +12,9 @@
         android:layout_height="wrap_content"
         android:id="@+id/tv_overview_title"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:layout_marginBottom="8dp"
         app:layout_constraintTop_toBottomOf="@+id/in_rating_box"
         app:layout_constraintLeft_toLeftOf="@+id/in_rating_box" />
-
-    <TextView
-        tools:text="Runtime: 120 min"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/tv_runtime"
-        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-        android:layout_marginTop="4dp"
-        android:paddingBottom="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/iv_movie_poster"
-        app:layout_constraintLeft_toRightOf="@+id/iv_movie_poster"
-        app:layout_constraintRight_toLeftOf="@+id/iv_movie_poster" />
 
     <TextView
         tools:text="Suicide Squad (2016)"
@@ -50,7 +39,12 @@
         android:id="@+id/iv_movie_poster"
         app:layout_constraintTop_toBottomOf="@+id/tv_movie_title"
         app:layout_constraintLeft_toLeftOf="@+id/tv_movie_title"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginLeft="0dp"
+        android:layout_marginStart="0dp"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         tools:text="From DC Comics comes the Suicide Squad, an antihero team of incarcerated supervillains who act as deniable assets for the United States government, undertaking high-risk black ops missions in exchange for commuted prison sentences."
@@ -63,7 +57,8 @@
         android:layout_marginRight="16dp"
         android:layout_width="0dp"
         android:paddingBottom="8dp"
-        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        app:layout_constraintHorizontal_bias="0.0" />
 
 <include layout="@layout/include_rating_box"
     android:layout_width="wrap_content"

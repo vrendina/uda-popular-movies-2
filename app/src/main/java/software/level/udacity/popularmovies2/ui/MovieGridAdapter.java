@@ -40,8 +40,8 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
 
     private void loadPosterImage(ImageView poster, Movie movie) {
         // If we have image data in the database decode it and display it
-        if(movie.encodedPoster != null) {
-            Bitmap bitmap = MovieServiceUtils.decodeImageData(movie.encodedPoster);
+        if(movie.poster != null) {
+            Bitmap bitmap = MovieServiceUtils.decodeImageData(movie.poster);
             poster.setImageBitmap(bitmap);
 
             // If there is no image data saved, load it from the web

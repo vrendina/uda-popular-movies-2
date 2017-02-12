@@ -9,7 +9,7 @@ import software.level.udacity.popularmovies2.data.MovieContract.MovieFavoriteEnt
 public class MovieDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "movies.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public MovieDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -29,7 +29,6 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                 MovieFavoriteEntry.COLUMN_RELEASEDATE   + " TEXT, "                                 +
                 MovieFavoriteEntry.COLUMN_POSTERPATH    + " TEXT, "                                 +
                 MovieFavoriteEntry.COLUMN_RATING        + " REAL, "                                 +
-                MovieFavoriteEntry.COLUMN_RUNTIME       + " INTEGER, "                              +
                 MovieFavoriteEntry.COLUMN_POSTER        + " BLOB, "                                 +
 
             " UNIQUE (" + MovieFavoriteEntry.COLUMN_MOVIEID +") ON CONFLICT REPLACE);";

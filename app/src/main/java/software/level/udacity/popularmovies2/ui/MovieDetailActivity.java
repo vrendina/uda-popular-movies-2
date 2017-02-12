@@ -1,7 +1,6 @@
 package software.level.udacity.popularmovies2.ui;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -14,10 +13,13 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import software.level.udacity.popularmovies2.R;
-import software.level.udacity.popularmovies2.api.model.MovieDetailsComposite;
+import software.level.udacity.popularmovies2.api.model.Movie;
+import software.level.udacity.popularmovies2.api.model.MovieReview;
 import software.level.udacity.popularmovies2.api.model.MovieTrailer;
 
 public class MovieDetailActivity extends AppCompatActivity implements MovieDetailAdapter.MovieOnClickHandler {
@@ -42,6 +44,19 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
 
         // Get the existing presenter or a new instance if it isn't cached
         presenter = PresenterManager.getPresenter(TAG, presenterFactory);
+
+        // Pull the movie information out of the passed intent and give it to the presenter
+        Movie movie = getIntent().getParcelableExtra(Movie.TAG);
+
+        if(movie != null) {
+            presenter.setMovieData(movie);
+        }
+
+        // Restore the state if we have a bundle
+        if(savedInstanceState != null) {
+            Bundle presenterState = savedInstanceState.getBundle(TAG);
+            presenter.restoreState(presenterState);
+        }
 
         configureRecyclerView();
     }
@@ -82,6 +97,8 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         super.onSaveInstanceState(outState);
 
         activityIsFinished = false;
+
+        outState.putBundle(TAG, presenter.saveState());
     }
 
     @Override
@@ -116,16 +133,6 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         startActivity(Intent.createChooser(intent, getString(R.string.trailer_share_chooser)));
     }
 
-    @Override
-    public void onClickSetFavorite(Bitmap poster) {
-        presenter.setFavorite(poster);
-    }
-
-    @Override
-    public void onClickRemoveFavorite() {
-        presenter.removeFavorite();
-    }
-
     /**
      * Performs the initial configuration for the RecyclerView. Configures the RecyclerView
      * to use a LinearLayoutManager and binds the adapter class.
@@ -136,7 +143,7 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         recyclerView.setLayoutManager(linearLayoutManager);
 
         // Create the adapter and set it
-        adapter = new MovieDetailAdapter(this);
+        adapter = new MovieDetailAdapter(this.presenter, this);
         recyclerView.setAdapter(adapter);
 
         // Add dividers
@@ -158,8 +165,8 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         recyclerView.setVisibility(View.VISIBLE);
     }
 
-    public void updateData(MovieDetailsComposite data) {
-        adapter.setMovieData(data);
+    public void updateData(Movie movie, ArrayList<MovieTrailer> trailers, ArrayList<MovieReview> reviews) {
+        adapter.setMovieData(movie, trailers, reviews);
     }
 
     public void showError() {
@@ -174,7 +181,6 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         @NonNull @Override
         public MovieDetailPresenter createPresenter() {
             return new MovieDetailPresenter(getResources().getString(R.string.API_KEY),
-                    getIntent().getIntExtra(Intent.EXTRA_TEXT, -1),
                     getContentResolver());
         }
     };

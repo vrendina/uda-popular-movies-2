@@ -10,4 +10,8 @@ public class MovieTrailerEnvelope {
 
     @SerializedName("results")
     public List<MovieTrailer> trailers = null;
+
+    public MovieTrailerEnvelope(List<MovieTrailer> trailers) {
+        this.trailers = trailers;
+    }
 }

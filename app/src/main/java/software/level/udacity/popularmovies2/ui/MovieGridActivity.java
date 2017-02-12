@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +18,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import software.level.udacity.popularmovies2.R;
 import software.level.udacity.popularmovies2.api.model.Movie;
+import software.level.udacity.popularmovies2.api.model.MovieEnvelope;
 
 public class MovieGridActivity extends AppCompatActivity implements MovieGridAdapter.MovieClickHandler {
 
@@ -42,6 +42,12 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
 
         // Get the existing presenter or a new instance if it isn't cached
         presenter = PresenterManager.getPresenter(TAG, presenterFactory);
+
+        // Restore the state if we have a bundle
+        if(savedInstanceState != null) {
+            Bundle presenterState = savedInstanceState.getBundle(TAG);
+            presenter.restoreState(presenterState);
+        }
         
         configureRecyclerView();
     }
@@ -73,7 +79,7 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
 
     /**
      * If this method is called by the system, Android believes that this activity will be
-     * recreated again and some information about the state shold be saved.
+     * recreated again and some information about the state should be saved.
      *
      * @param outState Bundle where state information can be saved
      */
@@ -82,6 +88,7 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         super.onSaveInstanceState(outState);
 
         activityIsFinished = false;
+        outState.putBundle(TAG, presenter.saveState());
     }
 
     @Override
@@ -89,8 +96,6 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         super.onDestroy();
         
         if(activityIsFinished) {
-            Log.d(TAG, "onDestroy: Instance of this activity is finished");
-
             presenter.dispose();
         }
 
@@ -105,7 +110,7 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
     @Override
     public void onClickMovie(Movie movie) {
         Intent intent = new Intent(this, MovieDetailActivity.class);
-        intent.putExtra(Intent.EXTRA_TEXT, movie.id);
+        intent.putExtra(Movie.TAG, movie);
 
         startActivity(intent);
     }
@@ -134,15 +139,15 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
         int id = item.getItemId();
         switch(id) {
             case R.id.action_favorite:
-                presenter.updateMovieData(MovieGridPresenter.REQUEST_FAVORITE);
+                presenter.updateMovieData(MovieEnvelope.TYPE_FAVORITE);
                 return true;
 
             case R.id.action_popular:
-                presenter.updateMovieData(MovieGridPresenter.REQUEST_POPULAR);
+                presenter.updateMovieData(MovieEnvelope.TYPE_POPULAR);
                 return true;
 
             case R.id.action_toprated:
-                presenter.updateMovieData(MovieGridPresenter.REQUEST_TOPRATED);
+                presenter.updateMovieData(MovieEnvelope.TYPE_TOPRATED);
                 return true;
         }
 
