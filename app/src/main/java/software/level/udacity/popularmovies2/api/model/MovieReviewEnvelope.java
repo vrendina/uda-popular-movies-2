@@ -19,4 +19,8 @@ public class MovieReviewEnvelope {
 
     @SerializedName("total_pages")
     public Integer totalPages;
+
+    public MovieReviewEnvelope(List<MovieReview> reviews) {
+        this.reviews = reviews;
+    }
 }

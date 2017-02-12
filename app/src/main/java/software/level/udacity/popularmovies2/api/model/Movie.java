@@ -27,8 +27,6 @@ public class Movie implements Parcelable {
     @SerializedName("vote_average")
     public Double voteAverage;
 
-    public boolean favorite;
-
     public byte[] poster;
 
     public Movie() {}
@@ -40,7 +38,6 @@ public class Movie implements Parcelable {
         releaseDate = in.readString();
         title = in.readString();
         voteAverage = in.readDouble();
-        favorite = in.readByte() != 0;
         poster = in.createByteArray();
     }
 
@@ -60,8 +57,7 @@ public class Movie implements Parcelable {
     public String toString() {
         return  "Title: "           + title +
                 ", Release date: "  + releaseDate +
-                ", Vote average: "  + voteAverage +
-                ", Favorite: "      + favorite;
+                ", Vote average: "  + voteAverage;
     }
 
     @Override
@@ -77,7 +73,6 @@ public class Movie implements Parcelable {
         dest.writeString(releaseDate);
         dest.writeString(title);
         dest.writeDouble(voteAverage);
-        dest.writeByte((byte) (favorite ? 1 : 0));
         dest.writeByteArray(poster);
     }
 }

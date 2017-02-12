@@ -44,7 +44,6 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     private ArrayList<Movie> toprated = new ArrayList<>();
 
     private static final String KEY_REQUEST_TYPE = "requestType";
-    private static final String KEY_MOVIES_FAVORITES = "favorites";
     private static final String KEY_MOVIES_POPULAR = "popular";
     private static final String KEY_MOVIES_TOPRATED = "toprated";
 
@@ -82,7 +81,8 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
     }
 
     /**
-     * Generates a bundle with state information for recreating the presenter.
+     * Generates a bundle with state information for recreating the presenter. Does not save the list
+     * of favorites to the bundle. Those can be recreated from the database if needed.
      *
      * @return Bundle containing state information
      */
@@ -94,7 +94,6 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
 
         // Save the lists of movie data
         state.putParcelableArrayList(KEY_MOVIES_POPULAR, popular);
-        state.putParcelableArrayList(KEY_MOVIES_FAVORITES, favorites);
         state.putParcelableArrayList(KEY_MOVIES_TOPRATED, toprated);
 
         Log.d(TAG, "saveState: " + state.toString());
@@ -114,7 +113,6 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         this.selectedRequestType = state.getInt(KEY_REQUEST_TYPE, MovieEnvelope.TYPE_POPULAR);
 
         this.toprated = state.getParcelableArrayList(KEY_MOVIES_TOPRATED);
-        this.favorites = state.getParcelableArrayList(KEY_MOVIES_FAVORITES);
         this.popular = state.getParcelableArrayList(KEY_MOVIES_POPULAR);
     }
 
@@ -365,9 +363,8 @@ public class MovieGridPresenter extends Presenter<MovieGridActivity> {
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
-            if(selectedRequestType == MovieEnvelope.TYPE_FAVORITE) {
-                favorites = new ArrayList<>();
-            }
+            Log.d(TAG, "onChange: Change to favorites observed, clearing list.");
+            favorites = new ArrayList<>();
         }
     }
 
