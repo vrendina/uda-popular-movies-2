@@ -110,9 +110,6 @@ public class MovieGridActivity extends AppCompatActivity implements MovieGridAda
     @Override
     public void onClickMovie(Movie movie) {
         Intent intent = new Intent(this, MovieDetailActivity.class);
-        intent.putExtra(Intent.EXTRA_TEXT, movie.id);
-
-        // Pass the entire parcelable movie object
         intent.putExtra(Movie.TAG, movie);
 
         startActivity(intent);
